@@ -5,8 +5,6 @@ import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 /**
  * Represents an estimated call (stop) at a specific location.
  * Contains both planned (aimed) and real-time estimated arrival/departure information.
- *
- * Field-to-element mapping is annotated explicitly to match SIRI element names.
  */
 public record EstimatedCall(
     /** Reference to the stop point/quay (e.g., "NSR:Quay:519") */

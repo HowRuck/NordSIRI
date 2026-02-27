@@ -8,10 +8,6 @@ import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
  * A frame (snapshot) of estimated journey information at a specific point in time.
  * Groups related estimated vehicle journeys together.
  *
- * SIRI element mapping for this frame:
- * - recordedAtTime                 -> RecordedAtTime
- * - estimatedVehicleJourneys (list) -> EstimatedVehicleJourney (elements are unwrapped; no enclosing list element)
- *
  * Notes:
  * - The RecordedAtTime element is the SIRI name for the timestamp when the frame was captured.
  * - EstimatedVehicleJourney elements are provided as a sequence of elements (no wrapper element),

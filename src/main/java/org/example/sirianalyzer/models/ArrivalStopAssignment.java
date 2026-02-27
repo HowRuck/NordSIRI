@@ -3,13 +3,6 @@ package org.example.sirianalyzer.models;
 /**
  * Information about platform/quay assignment for an arrival.
  * Used to communicate platform changes from the planned assignment.
- *
- * XML element mapping (SIRI):
- * - PlatformRef       -> platformRef
- * - QuayRef           -> quayRef
- * - AimedQuayRef      -> aimedQuayRef
- * - ExpectedQuayRef   -> expectedQuayRef
- * - ActualQuayRef     -> actualQuayRef
  */
 public record ArrivalStopAssignment(
     /** Reference to the platform (e.g., "1", "2", "A") */
