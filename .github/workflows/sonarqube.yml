@@ -2,15 +2,15 @@ name: SonarQube analysis
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
-      - 'src/**'
-      - 'pom.xml'
+      - "src/**"
+      - "pom.xml"
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
-      - 'src/**'
-      - 'pom.xml'
+      - "src/**"
+      - "pom.xml"
   workflow_dispatch:
 
 permissions:
@@ -28,6 +28,5 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
-          args:
-            -Dsonar.projectKey=HowRuck_NordSIRI
+          args: -Dsonar.projectKey=HowRuck_NordSIRI
             -Dsonar.organization=nordsiri
