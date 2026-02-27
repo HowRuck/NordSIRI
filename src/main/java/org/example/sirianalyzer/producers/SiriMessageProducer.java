@@ -2,6 +2,7 @@ package org.example.sirianalyzer.producers;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.example.sirianalyzer.models.EstimatedVehicleJourney;
 import org.example.sirianalyzer.models.SiriEtMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -18,7 +19,7 @@ public class SiriMessageProducer {
 
     private final String topic;
     private final JsonMapper jsonMapper;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, EstimatedVehicleJourney> kafkaTemplate;
 
     /**
      * Constructor for SiriMessageProducer
@@ -28,7 +29,7 @@ public class SiriMessageProducer {
      */
     public SiriMessageProducer(
         @Value("${siri.kafka.topic:siri-et-messages}") String topic,
-        KafkaTemplate<String, String> kafkaTemplate
+        KafkaTemplate<String, EstimatedVehicleJourney> kafkaTemplate
     ) {
         this.topic = topic;
         this.jsonMapper = new JsonMapper();
@@ -68,15 +69,9 @@ public class SiriMessageProducer {
             );
 
             for (var connection : includedConnections) {
-                var jsonMessage = jsonMapper.writeValueAsString(connection);
+                //var jsonMessage = jsonMapper.writeValueAsString(connection);
 
-                log.debug(
-                    "Sending message to topic {}: {}",
-                    topic,
-                    jsonMessage
-                );
-
-                kafkaTemplate.send(topic, jsonMessage).get();
+                kafkaTemplate.send(topic, connection).get();
             }
 
             log.debug("Successfully sent message to Kafka topic {}", topic);
