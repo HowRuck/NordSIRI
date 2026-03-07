@@ -26,7 +26,7 @@ public final class FeedEntityHashing {
      */
     public static EntityHash fromEntity(GtfsRealtime.FeedEntity entity) {
         var idBytes = entity.getId().getBytes(StandardCharsets.UTF_8);
-        var key = ByteBuffer.wrap(idBytes);
+        var key = ByteBuffer.allocateDirect(idBytes.length).put(idBytes).flip();
 
         var hashBytes = Hashing.murmur3_128()
                 .hashBytes(entity.toByteArray())
