@@ -8,7 +8,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Hashing utilities for GTFS FeedEntity objects using Murmur3 128-bit.
@@ -25,7 +24,7 @@ public final class FeedEntityHashing {
      * The key is the entity's UTF-8 ID bytes; the hash is stored as two longs (h1, h2).
      */
     public static EntityHash fromEntity(GtfsRealtime.FeedEntity entity) {
-        var idBytes = entity.getId().getBytes(StandardCharsets.UTF_8);
+        var idBytes = entity.getIdBytes().toByteArray();
         var key = ByteBuffer.allocateDirect(idBytes.length).put(idBytes).flip();
 
         var hashBytes = Hashing.murmur3_128()
