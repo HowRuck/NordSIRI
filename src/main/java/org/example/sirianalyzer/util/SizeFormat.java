@@ -1,4 +1,4 @@
-package org.example.sirianalyzer;
+package org.example.sirianalyzer.util;
 
 import java.util.Locale;
 
