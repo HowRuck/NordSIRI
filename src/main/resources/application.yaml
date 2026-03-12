@@ -5,6 +5,7 @@ spring:
   application:
     name: SiriAnalyzer
   kafka:
+    topic: gtfs-trip-updates
     bootstrap-servers: localhost:9092
 
 gtfs:
