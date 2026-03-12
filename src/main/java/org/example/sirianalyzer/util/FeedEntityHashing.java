@@ -1,10 +1,9 @@
 package org.example.sirianalyzer.util;
 
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import com.google.transit.realtime.GtfsRealtime;
 import lombok.NoArgsConstructor;
-
-import net.jpountz.xxhash.XXHash64;
-import net.jpountz.xxhash.XXHashFactory;
 
 /**
  * Hashing utilities for GTFS FeedEntity objects using Murmur3 128-bit
@@ -12,8 +11,7 @@ import net.jpountz.xxhash.XXHashFactory;
 @NoArgsConstructor
 public final class FeedEntityHashing {
 
-    private static final XXHash64 XXHASH = XXHashFactory.fastestInstance().hash64();
-    private static final long SEED = 0x9747b28cL;
+    private static final HashFunction STATE_HASHER = Hashing.farmHashFingerprint64();
 
     /**
      * Compute the state of a GTFS entity
@@ -25,7 +23,7 @@ public final class FeedEntityHashing {
         var keyBytes = entity.getIdBytes().toByteArray();
         var rawBytes = entity.toByteArray();
 
-        var hash = XXHASH.hash(rawBytes, 0, rawBytes.length, SEED);
+        long hash = STATE_HASHER.hashBytes(rawBytes).asLong();
 
         return new GtfsEntityState(entity, keyBytes, hash);
     }
