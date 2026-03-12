@@ -23,7 +23,7 @@ public final class FeedEntityHashing {
         var keyBytes = entity.getIdBytes().toByteArray();
         var rawBytes = entity.toByteArray();
 
-        long hash = STATE_HASHER.hashBytes(rawBytes).asLong();
+        var hash = STATE_HASHER.hashBytes(rawBytes).asLong();
 
         return new GtfsEntityState(entity, keyBytes, hash);
     }
