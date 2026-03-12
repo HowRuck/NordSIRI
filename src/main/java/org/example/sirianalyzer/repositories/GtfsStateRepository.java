@@ -18,10 +18,6 @@ public class GtfsStateRepository {
      * LMDB database handle for GTFS state data
      */
     private final Dbi<ByteBuffer> db;
-    /**
-     * Size of the hash value in bytes
-     */
-    private static final int HASH_SIZE = 16;
 
     /**
      * Checks if the hash for the specified key has changed
@@ -48,12 +44,8 @@ public class GtfsStateRepository {
      * @param key LMDB key
      * @param h   Hash value to store
      */
-    public void putHash(Txn<ByteBuffer> txn, ByteBuffer key, long h) {
-        var val = ByteBuffer.allocateDirect(HASH_SIZE)
-                .putLong(h)
-                .flip();
-
-        db.put(txn, key, val);
+    public void putHash(Txn<ByteBuffer> txn, ByteBuffer key, ByteBuffer h) {
+        db.put(txn, key, h);
     }
 
 }
