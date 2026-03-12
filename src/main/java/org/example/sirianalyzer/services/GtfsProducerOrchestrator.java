@@ -136,7 +136,8 @@ public class GtfsProducerOrchestrator {
 
         // Update LMDB with new hashes and check for changes
         var keyBuf = ByteBuffer.allocateDirect(256);
-        var updatesToSend = new ArrayList<GtfsRealtime.FeedEntity>();
+        // Preallocate list to avoid resizing during additions
+        var updatesToSend = new ArrayList<GtfsRealtime.FeedEntity>(entityStates.size());
 
         try (var txn = env.txnWrite()) {
             for (var entityState : entityStates) {
@@ -150,6 +151,7 @@ public class GtfsProducerOrchestrator {
 
                 if (stateRepo.hasChanged(txn, keyBuf, eh)) {
                     updatesToSend.add(entityState.original());
+
                     stateRepo.putHash(txn, keyBuf, eh);
                 }
             }
