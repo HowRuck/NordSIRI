@@ -128,7 +128,7 @@ public class GtfsProducerOrchestrator {
             int updated = 0;
 
             for (var entityState : entityStates) {
-                var keyBytes = entityState.keyWrapper().bytes();
+                var keyBytes = entityState.keyBytes();
 
                 var keyBuf = ByteBuffer.allocateDirect(keyBytes.length)
                         .put(keyBytes)

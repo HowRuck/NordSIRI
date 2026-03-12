@@ -28,7 +28,6 @@ public final class FeedEntityHashing {
     public static GtfsEntityState computeState(GtfsRealtime.FeedEntity entity) {
         // Construct key and hash values
         var keyBytes = entity.getIdBytes().toByteArray();
-        var keyWrapper = new KeyWrapper(keyBytes, Arrays.hashCode(keyBytes));
 
         var rawBytes = entity.toByteArray();
         var hashResult = Hashing.murmur3_128()
@@ -39,52 +38,22 @@ public final class FeedEntityHashing {
         var h1 = (long) LONG_VIEW.get(hashResult, 0);
         var h2 = (long) LONG_VIEW.get(hashResult, 8);
 
-        return new GtfsEntityState(entity, keyWrapper, h1, h2);
+        return new GtfsEntityState(entity, keyBytes, h1, h2);
     }
 
     /**
      * Immutable record for GTFS entity state
      *
      * @param original   Original GTFS entity
-     * @param keyWrapper Wrapper for the key
+     * @param keyBytes   Key bytes for the entity
      * @param h1         1st hash value
      * @param h2         2nd hash value
      */
     public record GtfsEntityState(
             GtfsRealtime.FeedEntity original,
-            KeyWrapper keyWrapper,
+            byte[] keyBytes,
             long h1,
             long h2
     ) {
-    }
-
-    /**
-     * Wrapper for byte array keys with precomputed hash code for efficient LMDB storage and comparison
-     *
-     * @param bytes           Bytes of the key
-     * @param precomputedHash Precomputed hash code
-     */
-    public record KeyWrapper(byte[] bytes, int precomputedHash) {
-
-        /**
-         * Override hashCode to use precomputed hash code
-         *
-         * @return Precomputed hash code
-         */
-        @Override
-        public int hashCode() {
-            return precomputedHash;
-        }
-
-        /**
-         * Override equals to compare byte arrays
-         *
-         * @param obj the reference object with which to compare.
-         * @return {@code true} if this object is the same as the obj argument; {@code false} otherwise.
-         */
-        @Override
-        public boolean equals(Object obj) {
-            return (obj instanceof KeyWrapper other) && (other.precomputedHash == precomputedHash);
-        }
     }
 }
