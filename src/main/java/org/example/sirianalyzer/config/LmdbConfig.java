@@ -15,7 +15,10 @@ public class LmdbConfig {
     @Bean(destroyMethod = "close")
     public Env<ByteBuffer> lmdbEnv() {
         File path = new File("./lmdb-data");
-        var _ = path.mkdirs();
+
+        if (!path.exists() && !path.mkdirs()) {
+            throw new IllegalStateException("Failed to create LMDB directory at: " + path.getAbsolutePath());
+        }
 
         return create()
                 .setMapSize(1024L * 1024 * 1024) // 1GB
