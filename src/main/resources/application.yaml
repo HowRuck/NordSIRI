@@ -4,6 +4,8 @@ spring:
       enabled: true
   application:
     name: SiriAnalyzer
+  kafka:
+    bootstrap-servers: localhost:9092
 
 gtfs:
   fetch:
