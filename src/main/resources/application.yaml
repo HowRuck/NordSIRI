@@ -7,9 +7,22 @@ spring:
   kafka:
     topic: gtfs-trip-updates
     bootstrap-servers: localhost:9092
+  boot:
+    admin:
+      client:
+        url: http://localhost:8080
 
 gtfs:
   fetch:
     interval-ms: 20000
   feed:
     url: https://realtime.gtfs.de/realtime-free.pb
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
