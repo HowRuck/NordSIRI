@@ -17,7 +17,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <protobuf-java.version>4.34.0</protobuf-java.version>
+        <protobuf-java.version>4.34.1</protobuf-java.version>
         <sonar.organization>HowRuck_NordSIRI</sonar.organization>
     </properties>
 
