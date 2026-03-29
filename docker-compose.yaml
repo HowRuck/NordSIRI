@@ -46,3 +46,67 @@ volumes:
 networks:
   kafka-network:
     driver: bridge
+
+    IntelliJ IDEA 2026.1 RC
+    Build #IU-261.22158.182, built on March 18, 2026
+    Source revision: 8df19f8c18d2b
+    Licensed to Erik Vogel
+    Subscription is active until February 25, 2027.
+    For educational use only.
+    Runtime version: 25.0.2+10-b329.72 amd64137.0.17-261-b65
+    VM: OpenJDK 64-Bit Server VM by JetBrains s.r.o.
+    Toolkit: sun.awt.wl.WLToolkit
+    Linux 6.19.9-1-cachyos
+    CachyOS; glibc:
+      2.43; desktop: KDE (plasmashell 6.6.3)
+    Exception reporter ID: 210326396df6a28-697d-44e6-8597-ab81576a3ed8
+    GC: G1 Young Generation, G1 Concurrent GC, G1 Old Generation
+    Memory: 2048M
+    Cores: 16
+    Vulkan Rendering is ON:
+      Presentation is ON
+      Intel(R) UHD Graphics (TGL GT1) (INTEGRATED_GPU), caps=0xc0000007
+      NVIDIA GeForce RTX 3050 Ti Laptop GPU (DISCRETE_GPU), caps=0xc0000006
+    Registry:
+      ide.experimental.ui=true
+    Non-Bundled Plugins:
+      com.intellij.debugger.collections.visualizer (261.22158.185)
+      com.intellij.cron (261.22158.185)
+      Refactor-X (261.22158.190)
+      XPathView (261.22158.185)
+      com.intellij.spring (261.22158.223)
+      idea.plugin.protoeditor (261.22158.185)
+      com.intellij.notebooks.core (261.22158.185)
+      com.intellij.microservices.ui (261.22158.190)
+      intellij.jupyter (261.22158.195)
+      com.jetbrains.sh (261.22158.195)
+      com.intellij.javaee (261.22158.185)
+      org.toml.lang (261.22158.185)
+      com.intellij.kubernetes (261.22158.185)
+      com.intellij.properties (261.22158.185)
+      com.intellij.javaee.el (261.22158.185)
+      com.intellij.thymeleaf (261.22158.185)
+      com.intellij.velocity (261.22158.185)
+      com.intellij.beanValidation (261.22158.185)
+      Docker (261.22158.195)
+      com.intellij.flyway (261.22158.185)
+      com.intellij.liquibase (261.22158.185)
+      org.jetbrains.plugins.vue (261.22158.208)
+      intellij.vitejs (261.22158.216)
+      tslint (261.22158.216)
+      intellij.prettierJS (261.22158.216)
+      intellij.nextjs (261.22158.216)
+      com.deadlock.scsyntax (261.22158.216)
+      com.intellij.plugins.webcomponents (261.22158.216)
+      com.intellij.tasks (261.22158.195)
+      com.intellij.tasks.timeTracking (261.22158.195)
+      HtmlTools (261.22158.195)
+      NodeJS (261.22158.216)
+      Karma (261.22158.216)
+      org.jetbrains.plugins.remote-run (261.22158.195)
+      com.jetbrains.plugins.webDeployment (261.22158.195)
+      com.intellij.mcpServer (261.22158.220)
+      org.jetbrains.plugins.docker.gateway (261.22158.195)
+      org.jetbrains.plugins.node-remote-interpreter (261.22158.216)
+    Kotlin: 261.22158.182-IJ
+    Current Desktop: KDE

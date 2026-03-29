@@ -21,7 +21,7 @@ public final class SizeFormat {
      * @return A human-readable string representation of the input bytes using
      *         binary prefixes
      */
-    public static String humanBytes(int bytes) {
+    public static String humanBytes(long bytes) {
         if (bytes < 0)
             bytes = 0;
         if (bytes < 1024)

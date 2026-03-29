@@ -1,5 +1,6 @@
 package org.example.sirianalyzer.services;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -12,18 +13,22 @@ public class GtfsIngestionService {
 
     private final GtfsPollingService gtfsPollingService;
     private final GtfsParserService gtfsParserService;
-    private final GtfsProducerOrchestrator gtfsProducerOrchestrator;
+
+    private final AtomicBoolean isRunning = new AtomicBoolean(false);
 
     @Scheduled(fixedRateString = "${gtfs.fetch.interval-ms}")
     public void process() {
-        var feedBytes = gtfsPollingService.poll();
-
-        var feedMessage = gtfsParserService.parseGtfs(feedBytes);
-
-        if (feedMessage == null) {
+        if (isRunning.get()) {
+            log.info(
+                "Previous polling is still running, skipping this iteration"
+            );
             return;
         }
 
-        gtfsProducerOrchestrator.syncFeed(feedMessage.getEntityList());
+        isRunning.set(true);
+
+        var _ = gtfsPollingService.pollStream(gtfsParserService::parseGtfs);
+
+        isRunning.set(false);
     }
 }
