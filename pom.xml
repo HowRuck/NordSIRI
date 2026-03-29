@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.3</version>
+        <version>4.0.5</version>
         <relativePath/>
     </parent>
 
@@ -17,7 +17,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <protobuf-java.version>4.34.0</protobuf-java.version>
+        <protobuf-java.version>4.34.1</protobuf-java.version>
         <sonar.organization>HowRuck_NordSIRI</sonar.organization>
     </properties>
 
@@ -79,7 +79,7 @@
             <plugin>
                 <groupId>io.github.ascopes</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
-                <version>5.0.2</version>
+                <version>5.1.0</version>
                 <configuration>
                     <protoc>${protobuf-java.version}</protoc>
                 </configuration>
