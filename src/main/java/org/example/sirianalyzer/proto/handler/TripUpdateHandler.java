@@ -8,7 +8,6 @@ import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-import org.example.sirianalyzer.proto.FeedEntityHandler;
 import org.example.sirianalyzer.proto.GtfsEntityType;
 import org.example.sirianalyzer.proto.ProcessingAccumulator;
 import org.example.sirianalyzer.proto.dedup.EntityUpdateFilter;
