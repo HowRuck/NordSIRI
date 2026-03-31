@@ -1,7 +1,9 @@
-package org.example.sirianalyzer.proto;
+package org.example.sirianalyzer.proto.handler;
 
 import com.google.protobuf.ByteString;
 import java.io.IOException;
+import org.example.sirianalyzer.proto.GtfsEntityType;
+import org.example.sirianalyzer.proto.ProcessingAccumulator;
 
 /**
  * Strategy for processing one type of {@code FeedEntity} payload.
