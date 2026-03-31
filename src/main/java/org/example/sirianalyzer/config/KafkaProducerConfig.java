@@ -1,5 +1,6 @@
 package org.example.sirianalyzer.config;
 
+import java.util.HashMap;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -10,7 +11,6 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 
-import java.util.HashMap;
 /**
  * Configuration for Kafka producer
  */
@@ -33,9 +33,18 @@ public class KafkaProducerConfig {
         var configProps = new HashMap<String, Object>();
 
         // Initialize Kafka producer configuration properties
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class);
+        configProps.put(
+            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+            bootstrapServers
+        );
+        configProps.put(
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+            StringSerializer.class
+        );
+        configProps.put(
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+            ByteArraySerializer.class
+        );
 
         // Performance optimizations
         configProps.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "lz4");
@@ -52,5 +61,4 @@ public class KafkaProducerConfig {
     public KafkaTemplate<String, byte[]> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
-
 }
