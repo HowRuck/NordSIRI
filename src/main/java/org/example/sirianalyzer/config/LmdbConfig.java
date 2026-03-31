@@ -19,7 +19,7 @@ public class LmdbConfig {
      */
     @Bean(destroyMethod = "close")
     public Env<ByteBuffer> lmdbEnv() {
-        var path = new File("~/.cache/lmdb");
+        var path = new File(System.getProperty("user.home"), ".cache/lmdb");
 
         if (!path.exists() && !path.mkdirs()) {
             throw new IllegalStateException(
