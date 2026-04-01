@@ -1,32 +1,39 @@
 package org.example.sirianalyzer.repositories;
 
-import com.google.common.primitives.Longs;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
+import org.lmdbjava.Dbi;
+import org.lmdbjava.Env;
+import org.lmdbjava.Txn;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
 public class EntityHashRepository {
 
-    private final RocksDB rocksDB;
+    private final Env<ByteBuffer> env;
+    private final Dbi<ByteBuffer> db;
     private final MeterRegistry registry;
 
-    public Long getHash(String stableId) {
-        try {
-            var key = stableId.getBytes();
-            var found = rocksDB.get(key);
+    private final ThreadLocal<ByteBuffer> keyBuffer = ThreadLocal.withInitial(
+        () -> ByteBuffer.allocateDirect(512)
+    );
+    private final ThreadLocal<ByteBuffer> valueBuffer = ThreadLocal.withInitial(
+        () -> ByteBuffer.allocateDirect(Long.BYTES)
+    );
 
-            return (found == null) ? null : Longs.fromByteArray(found);
-        } catch (RocksDBException e) {
-            throw new RuntimeException(e);
-        }
+    public Txn<ByteBuffer> openReadOnly() {
+        return env.txnRead();
+    }
+
+    public Long getHash(Txn<ByteBuffer> txn, String stableId) {
+        var key = writeToKeyBuffer(stableId);
+        var found = db.get(txn, key);
+
+        return (found == null) ? null : found.getLong();
     }
 
     public void upsertBatch(String source, Map<String, Long> batch) {
@@ -37,23 +44,38 @@ public class EntityHashRepository {
             .counter("gtfs.lmdb.writes", "source", source)
             .increment(batch.size());
 
-        try (var writeBatch = new WriteBatch()) {
-            var writeOpts = new WriteOptions();
+        try (var writeTxn = env.txnWrite()) {
+            batch.forEach((id, hash) -> {
+                var keyBuf = writeToKeyBuffer(id);
+                var valueBuf = writeToValueBuffer(hash);
 
-            for (var entry : batch.entrySet()) {
-                var key = entry.getKey().getBytes();
-                var hash = entry.getValue();
+                db.put(writeTxn, keyBuf, valueBuf);
+            });
+            writeTxn.commit();
 
-                writeBatch.put(key, Longs.toByteArray(hash));
-            }
+            sample.stop(
+                registry.timer("gtfs.lmdb.commit.latency", "source", source)
+            );
+        }
+    }
 
-            rocksDB.write(writeOpts, writeBatch);
-        } catch (RocksDBException e) {
-            throw new RuntimeException("RocksDB batch write failed", e);
+    private ByteBuffer writeToKeyBuffer(String stableId) {
+        var buffer = keyBuffer.get();
+        var keyBytes = stableId.getBytes();
+
+        // Resize buffer if necessary
+        if (keyBytes.length > buffer.capacity()) {
+            buffer = ByteBuffer.allocateDirect(keyBytes.length);
+            keyBuffer.set(buffer);
         }
 
-        sample.stop(
-            registry.timer("gtfs.lmdb.commit.latency", "source", source)
-        );
+        buffer.clear();
+        return buffer.put(keyBytes).flip();
+    }
+
+    private ByteBuffer writeToValueBuffer(long hash) {
+        var buffer = valueBuffer.get();
+        buffer.rewind();
+        return buffer.putLong(hash).flip();
     }
 }

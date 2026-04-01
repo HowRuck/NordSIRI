@@ -51,6 +51,11 @@
             <version>${protobuf-java.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.lmdbjava</groupId>
+            <artifactId>lmdbjava</artifactId>
+            <version>0.9.3</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>33.5.0-jre</version>
@@ -70,11 +75,6 @@
             <artifactId>spring-boot-starter-restclient-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.rocksdb</groupId>
-            <artifactId>rocksdbjni</artifactId>
-            <version>10.10.1</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -82,7 +82,7 @@
             <plugin>
                 <groupId>io.github.ascopes</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
-                <version>5.1.2</version>
+                <version>5.1.1</version>
                 <configuration>
                     <protoc>${protobuf-java.version}</protoc>
                 </configuration>

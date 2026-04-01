@@ -52,31 +52,37 @@ public class GtfsFilterService {
 
         var totalSeen = 0;
 
-        while (!cis.isAtEnd()) {
-            var tag = cis.readTag();
+        try (var readTxn = repository.openReadOnly()) {
+            while (!cis.isAtEnd()) {
+                var tag = cis.readTag();
 
-            if (WireFormat.getTagFieldNumber(tag) == 2) {
-                totalSeen++;
+                if (WireFormat.getTagFieldNumber(tag) == 2) {
+                    totalSeen++;
 
-                var data = cis.readBytes();
+                    var data = cis.readBytes();
 
-                var entityCis = data.newCodedInput();
-                var scan = GtfsScanner.scanEntity(entityCis);
+                    var entityCis = data.newCodedInput();
+                    var scan = GtfsScanner.scanEntity(entityCis);
 
-                if (scan.stableId() == null) continue;
+                    if (scan.stableId() == null) continue;
 
-                var storageKey = feedId + ":" + scan.stableId();
-                var currentHash = FeedHashing.hashBytes(data);
-                var oldHash = repository.getHash(storageKey);
+                    var storageKey = feedId + ":" + scan.stableId();
+                    var currentHash = FeedHashing.hashBytes(data);
+                    var oldHash = repository.getHash(readTxn, storageKey);
 
-                if (oldHash == null || oldHash != currentHash) {
-                    results.add(
-                        GtfsByteEntity.of(scan.stableId(), scan.type(), data)
-                    );
-                    writeBuffer.put(storageKey, currentHash);
+                    if (oldHash == null || oldHash != currentHash) {
+                        results.add(
+                            GtfsByteEntity.of(
+                                scan.stableId(),
+                                scan.type(),
+                                data
+                            )
+                        );
+                        writeBuffer.put(storageKey, currentHash);
+                    }
+                } else {
+                    cis.skipField(tag);
                 }
-            } else {
-                cis.skipField(tag);
             }
         }
 
