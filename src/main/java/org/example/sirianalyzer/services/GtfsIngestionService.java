@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 public class GtfsIngestionService {
 
     private final GtfsPollingService gtfsPollingService;
-    private final GtfsParserService gtfsParserService;
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
 
@@ -27,7 +26,7 @@ public class GtfsIngestionService {
 
         isRunning.set(true);
 
-        var _ = gtfsPollingService.pollStream(gtfsParserService::parseGtfs);
+        var _ = gtfsPollingService.pollStream();
 
         isRunning.set(false);
     }

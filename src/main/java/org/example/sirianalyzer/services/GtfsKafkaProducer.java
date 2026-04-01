@@ -12,10 +12,12 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class GtfsKafkaProducer {
+
     /**
      * Kafka template for sending messages
      */
     private final KafkaTemplate<String, byte[]> kafka;
+
     /**
      * Kafka topic to send messages to
      */

@@ -1,8 +1,8 @@
 package org.example.sirianalyzer.services;
 
-import com.google.common.base.Function;
-import java.io.InputStream;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.example.sirianalyzer.model.GtfsByteEntity;
 import org.example.sirianalyzer.util.SizeFormat;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,15 +17,20 @@ public class GtfsPollingService {
 
     private final RestClient restClient;
     private final String feedUrl;
+    private final GtfsFilterService filterService;
 
     /**
      * Creates a new GTFS polling service with the provided feed URL
      *
      * @param feedUrl The URL of the GTFS feed to poll
      */
-    public GtfsPollingService(@Value("${gtfs.feed.url}") String feedUrl) {
+    public GtfsPollingService(
+        @Value("${gtfs.feed.url}") String feedUrl,
+        GtfsFilterService filterService
+    ) {
         this.feedUrl = feedUrl;
         this.restClient = RestClient.create(feedUrl);
+        this.filterService = filterService;
     }
 
     /**
@@ -57,14 +62,7 @@ public class GtfsPollingService {
         }
     }
 
-    /**
-     * Polls the GTFS feed stream from the configured URL and processes it using the given processor.
-     *
-     * @param <T> The type of the result returned by the processor
-     * @param processor The function to process the feed stream
-     * @return The result of processing the feed stream
-     */
-    public <T> T pollStream(Function<InputStream, T> processor) {
+    public List<GtfsByteEntity> pollStream() {
         var startTime = System.currentTimeMillis();
         log.info("Polling GTFS feed stream from {}", feedUrl);
 
@@ -85,7 +83,7 @@ public class GtfsPollingService {
                     );
 
                     try (var inputStream = response.getBody()) {
-                        return processor.apply(inputStream);
+                        return filterService.filter("testFeedId", inputStream);
                     } finally {
                         log.info(
                             "Finished processing GTFS feed stream in {} ms",
