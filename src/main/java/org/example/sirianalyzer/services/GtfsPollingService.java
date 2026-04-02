@@ -2,7 +2,6 @@ package org.example.sirianalyzer.services;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sirianalyzer.model.GtfsByteEntity;
 import org.example.sirianalyzer.util.SizeFormat;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -62,7 +61,7 @@ public class GtfsPollingService {
         }
     }
 
-    public List<GtfsByteEntity> pollStream() {
+    public List<GtfsFilterService.ConfirmedUpdate> pollStream() {
         var startTime = System.currentTimeMillis();
         log.info("Polling GTFS feed stream from {}", feedUrl);
 

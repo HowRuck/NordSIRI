@@ -2,80 +2,95 @@ package org.example.sirianalyzer.repositories;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.lmdbjava.Dbi;
-import org.lmdbjava.Env;
-import org.lmdbjava.Txn;
+import org.example.sirianalyzer.model.EntityHash;
+import org.example.sirianalyzer.model.StorageKey;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Repository for storing and retrieving entity hashes from Redis
+ */
 @Repository
 @RequiredArgsConstructor
 public class EntityHashRepository {
 
-    private final Env<ByteBuffer> env;
-    private final Dbi<ByteBuffer> db;
+    private final RedisTemplate<String, byte[]> redisTemplate;
     private final MeterRegistry registry;
 
-    private final ThreadLocal<ByteBuffer> keyBuffer = ThreadLocal.withInitial(
-        () -> ByteBuffer.allocateDirect(512)
-    );
-    private final ThreadLocal<ByteBuffer> valueBuffer = ThreadLocal.withInitial(
-        () -> ByteBuffer.allocateDirect(Long.BYTES)
-    );
-
-    public Txn<ByteBuffer> openReadOnly() {
-        return env.txnRead();
+    /**
+     * Retrieves the hash value for the given storage key
+     *
+     * @param key The storage key to retrieve the hash for
+     * @return The hash value, or null if not found
+     */
+    public byte[] getHash(StorageKey key) {
+        return redisTemplate.opsForValue().get(key.value());
     }
 
-    public Long getHash(Txn<ByteBuffer> txn, String stableId) {
-        var key = writeToKeyBuffer(stableId);
-        var found = db.get(txn, key);
+    /**
+     * Retrieves the hash values for the given storage keys
+     *
+     * @param keys The storage keys to retrieve the hashes for
+     * @return A list of {@link EntityHash} objects, one for each key, with null values for keys not found
+     */
+    public List<EntityHash> getHashBatch(List<StorageKey> keys) {
+        if (keys.isEmpty()) {
+            return List.of();
+        }
 
-        return (found == null) ? null : found.getLong();
+        // Convert StorageKey to String keys for Redis multi-get
+        var stringKeys = keys.stream().map(StorageKey::value).toList();
+        // Perform multi-get to retrieve values for all keys
+        var values = redisTemplate.opsForValue().multiGet(stringKeys);
+
+        // If values are null, return a list of EntityHash with null values for each key
+        // otherwise, map the values to EntityHash objects
+        if (values == null) {
+            return keys
+                .stream()
+                .map(_ -> new EntityHash(null))
+                .toList();
+        }
+        return values.stream().map(EntityHash::new).toList();
     }
 
-    public void upsertBatch(String source, Map<String, Long> batch) {
-        if (batch.isEmpty()) return;
+    /**
+     * Upserts (inserts or updates) a batch of entity hashes in Redis
+     *
+     * @param source The source of the batch (e.g. feed ID)
+     * @param batch  A map of storage keys to entity hashes to upsert
+     */
+    public void upsertBatch(String source, Map<StorageKey, EntityHash> batch) {
+        if (batch.isEmpty()) {
+            return;
+        }
 
+        // Record the start time for the batch upsert and increment the write counter
         var sample = Timer.start(registry);
         registry
-            .counter("gtfs.lmdb.writes", "source", source)
+            .counter("gtfs.redis.writes", "source", source)
             .increment(batch.size());
 
-        try (var writeTxn = env.txnWrite()) {
-            batch.forEach((id, hash) -> {
-                var keyBuf = writeToKeyBuffer(id);
-                var valueBuf = writeToValueBuffer(hash);
-
-                db.put(writeTxn, keyBuf, valueBuf);
-            });
-            writeTxn.commit();
-
-            sample.stop(
-                registry.timer("gtfs.lmdb.commit.latency", "source", source)
+        // Convert the batch to a map of String keys to byte[] values for Redis multi-set
+        var rawBatch = batch
+            .entrySet()
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    entry -> entry.getKey().value(),
+                    entry -> entry.getValue().value()
+                )
             );
-        }
-    }
 
-    private ByteBuffer writeToKeyBuffer(String stableId) {
-        var buffer = keyBuffer.get();
-        var keyBytes = stableId.getBytes();
+        // Perform multi-set to upsert all values in the batch
+        redisTemplate.opsForValue().multiSet(rawBatch);
 
-        // Resize buffer if necessary
-        if (keyBytes.length > buffer.capacity()) {
-            buffer = ByteBuffer.allocateDirect(keyBytes.length);
-            keyBuffer.set(buffer);
-        }
-
-        buffer.clear();
-        return buffer.put(keyBytes).flip();
-    }
-
-    private ByteBuffer writeToValueBuffer(long hash) {
-        var buffer = valueBuffer.get();
-        buffer.rewind();
-        return buffer.putLong(hash).flip();
+        sample.stop(
+            registry.timer("gtfs.redis.commit.latency", "source", source)
+        );
     }
 }
