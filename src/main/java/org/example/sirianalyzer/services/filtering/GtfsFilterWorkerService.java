@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import lombok.RequiredArgsConstructor;
@@ -120,7 +120,7 @@ public class GtfsFilterWorkerService {
         try {
             var keys = pendingMetas.stream().map(EntityMeta::key).toList();
             var existingHashes = repository.getHashBatch(keys);
-            var redisUpdates = new LinkedHashMap<String, Long>(keys.size());
+            var redisUpdates = new HashMap<String, Long>(keys.size());
 
             for (var i = 0; i < pendingMetas.size(); i++) {
                 var meta = pendingMetas.get(i);
