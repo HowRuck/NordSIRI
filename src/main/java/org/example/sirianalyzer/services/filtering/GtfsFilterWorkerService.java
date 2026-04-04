@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sirianalyzer.proto.GtfsScanner;
@@ -22,41 +20,6 @@ import org.springframework.stereotype.Service;
 public class GtfsFilterWorkerService {
 
     private final EntityHashRepository repository;
-
-    /**
-     * Runs the worker loop that consumes queued entities and appends confirmed updates.
-     *
-     * @param feedId the feed identifier
-     * @param queue the queue of entity payloads
-     * @param results the list that accumulates confirmed updates
-     */
-    public void runWorker(
-        String feedId,
-        BlockingQueue<ByteString> queue,
-        List<GtfsFilterService.ConfirmedUpdate> results
-    ) {
-        var pendingEntities = new ArrayList<BatchEntity>(
-            GtfsFilterService.BATCH_SIZE
-        );
-
-        try {
-            while (true) {
-                var data = queue.take();
-                if (data == GtfsFilterService.POISON_PILL) {
-                    break;
-                }
-
-                processEntity(feedId, data, pendingEntities, results);
-            }
-
-            flushPendingBatch(pendingEntities, results);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("Worker interrupted", e);
-        } catch (IOException e) {
-            log.error("Failed to scan entity", e);
-        }
-    }
 
     /**
      * Processes a single entity payload and appends it to the pending batch.
