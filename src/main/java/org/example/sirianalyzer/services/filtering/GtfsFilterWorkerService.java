@@ -106,7 +106,9 @@ public class GtfsFilterWorkerService {
                 }
             }
 
-            var redisUpdates = new HashMap<String, Long>(keys.size());
+            var redisUpdates = new HashMap<String, Long>(
+                changedEntities.size()
+            );
             for (var e : changedEntities) {
                 redisUpdates.put(e.key(), e.hash());
             }
