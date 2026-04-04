@@ -64,7 +64,7 @@ public class GtfsFilterWorkerService {
             }
         }
 
-        return flushPendingBatch(pendingEntities);
+        return filterChangedEntities(pendingEntities);
     }
 
     /**
@@ -74,7 +74,7 @@ public class GtfsFilterWorkerService {
      * @param pendingPayloads pending payloads
      * @param confirmedUpdates confirmed updates
      */
-    public List<BatchEntity> flushPendingBatch(
+    public List<BatchEntity> filterChangedEntities(
         List<BatchEntity> pendingEntities
     ) {
         if (pendingEntities.isEmpty()) {
@@ -83,13 +83,12 @@ public class GtfsFilterWorkerService {
 
         try {
             var keys = new ArrayList<String>(pendingEntities.size());
-
             for (var e : pendingEntities) {
                 keys.add(e.key());
             }
 
             var existingHashes = repository.getHashBatch(keys);
-            var redisUpdates = new HashMap<String, Long>(keys.size());
+
             var changedEntities = new ArrayList<BatchEntity>(
                 pendingEntities.size()
             );
@@ -103,12 +102,12 @@ public class GtfsFilterWorkerService {
                     existingHash == null || e.hash() != existingHash;
 
                 if (isChanged) {
-                    // Entity is unchanged, remove from pending batch
                     changedEntities.add(e);
                 }
             }
 
-            for (var e : pendingEntities) {
+            var redisUpdates = new HashMap<String, Long>(keys.size());
+            for (var e : changedEntities) {
                 redisUpdates.put(e.key(), e.hash());
             }
 
