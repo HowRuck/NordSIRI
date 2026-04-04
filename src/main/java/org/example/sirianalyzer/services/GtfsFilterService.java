@@ -12,6 +12,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +31,8 @@ public class GtfsFilterService {
     public static final int BATCH_SIZE = 10_000;
     public static final int ENTITY_FIELD_NUMBER = 2;
 
-    // Sentinel object to tell the worker thread to stop.
-    public static final ByteString POISON_PILL = ByteString.copyFromUtf8(
-        "STOP"
-    );
+    private final ExecutorService executorService =
+        Executors.newVirtualThreadPerTaskExecutor();
 
     private final MeterRegistry registry;
     private final GtfsFilterWorkerService workerService;
@@ -91,26 +93,10 @@ public class GtfsFilterService {
             new BufferedInputStream(rawStream)
         );
 
-        var confirmedUpdates = Collections.synchronizedList(
-            new ArrayList<ConfirmedUpdate>()
-        );
-
-        var workQueue = new LinkedBlockingQueue<ByteString>(BATCH_SIZE * 2);
-        var workerThread = Thread.ofVirtual().start(() ->
-            workerService.runWorker(feedId, workQueue, confirmedUpdates)
-        );
-
         var totalSeen = 0;
         var totalStallNanos = 0L;
 
-        try {
-            totalStallNanos = produceWork(cis, workQueue);
-            totalSeen = lastSeenCount;
-        } finally {
-            workQueue.offer(POISON_PILL);
-        }
-
-        waitForWorker(workerThread);
+        var confirmedUpdates = produceWork(cis);
 
         logSummary(feedId, totalSeen, confirmedUpdates, totalStallNanos);
 
@@ -129,12 +115,15 @@ public class GtfsFilterService {
      *
      * @throws IOException If an error occurs while reading from the CodedInputStream
      */
-    private long produceWork(
-        CodedInputStream cis,
-        BlockingQueue<ByteString> workQueue
-    ) throws IOException {
+    private List<ConfirmedUpdate> produceWork(CodedInputStream cis)
+        throws IOException {
         var seen = 0;
-        var stallNanos = 0L;
+        var feedId = "";
+
+        var batch = new ArrayList<ByteString>(BATCH_SIZE);
+        var batchFutures = new ArrayList<
+            CompletableFuture<List<ConfirmedUpdate>>
+        >();
 
         while (!cis.isAtEnd()) {
             var tag = cis.readTag();
@@ -146,35 +135,47 @@ public class GtfsFilterService {
 
             seen++;
             var data = cis.readBytes();
-            var start = System.nanoTime();
+            batch.add(data);
 
-            try {
-                workQueue.put(data);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                log.error("Producer interrupted", e);
-                break;
+            if (batch.size() == BATCH_SIZE) {
+                var batchCopy = new ArrayList<>(batch);
+
+                var future = CompletableFuture.supplyAsync(
+                    () -> workerService.processBatch(feedId, batchCopy),
+                    executorService
+                );
+                batchFutures.add(future);
+                batch.clear();
             }
-
-            stallNanos += System.nanoTime() - start;
         }
+
+        if (!batch.isEmpty()) {
+            var future = CompletableFuture.supplyAsync(
+                () -> workerService.processBatch(feedId, batch),
+                executorService
+            );
+            batchFutures.add(future);
+        }
+
+        var confirmedUpdates = Collections.synchronizedList(
+            new ArrayList<ConfirmedUpdate>(lastSeenCount)
+        );
+
+        var startNanos = System.nanoTime();
+        for (var future : batchFutures) {
+            var updates = future.join();
+            confirmedUpdates.addAll(updates);
+        }
+        var totalStallNanos = System.nanoTime() - startNanos;
+
+        log.info(
+            "Thread consolidation finished with stall time: {}ms",
+            totalStallNanos / 1_000_000L
+        );
 
         lastSeenCount = seen;
-        return stallNanos;
-    }
 
-    /**
-     * Waits for the worker thread to complete
-     *
-     * @param workerThread the worker thread to wait for
-     */
-    private void waitForWorker(Thread workerThread) {
-        try {
-            workerThread.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("Worker interrupted", e);
-        }
+        return confirmedUpdates;
     }
 
     /**

@@ -6,12 +6,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sirianalyzer.proto.GtfsScanner;
 import org.example.sirianalyzer.repositories.EntityHashRepository;
 import org.example.sirianalyzer.services.GtfsFilterService;
 import org.example.sirianalyzer.util.FeedHashing;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -86,6 +88,30 @@ public class GtfsFilterWorkerService {
         if (pendingEntities.size() >= GtfsFilterService.BATCH_SIZE) {
             flushPendingBatch(pendingEntities, results);
         }
+    }
+
+    @Async
+    public List<GtfsFilterService.ConfirmedUpdate> processBatch(
+        String feedId,
+        List<ByteString> data
+    ) {
+        log.info("Processing batch of {} entities", data.size());
+
+        var pendingEntities = new ArrayList<BatchEntity>(data.size());
+        var results = new ArrayList<GtfsFilterService.ConfirmedUpdate>(
+            data.size()
+        );
+
+        for (var d : data) {
+            try {
+                processEntity(feedId, d, pendingEntities, results);
+            } catch (IOException e) {
+                log.error("Failed to scan entity", e);
+            }
+        }
+        flushPendingBatch(pendingEntities, results);
+
+        return results;
     }
 
     /**
