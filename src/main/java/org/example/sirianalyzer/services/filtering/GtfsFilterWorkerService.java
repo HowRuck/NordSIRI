@@ -1,16 +1,14 @@
 package org.example.sirianalyzer.services.filtering;
 
 import com.google.protobuf.ByteString;
+import com.oracle.graal.phases.preciseinline.priorityinline.nodes.devirtualization.e;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sirianalyzer.model.EntityHash;
-import org.example.sirianalyzer.model.StorageKey;
 import org.example.sirianalyzer.proto.GtfsScanner;
 import org.example.sirianalyzer.repositories.EntityHashRepository;
 import org.example.sirianalyzer.services.GtfsFilterService;
@@ -36,10 +34,7 @@ public class GtfsFilterWorkerService {
         BlockingQueue<ByteString> queue,
         List<GtfsFilterService.ConfirmedUpdate> results
     ) {
-        var pendingMetas = new ArrayList<EntityMeta>(
-            GtfsFilterService.BATCH_SIZE
-        );
-        var pendingPayloads = new ArrayList<ByteString>(
+        var pendingEntities = new ArrayList<BatchEntity>(
             GtfsFilterService.BATCH_SIZE
         );
 
@@ -50,16 +45,10 @@ public class GtfsFilterWorkerService {
                     break;
                 }
 
-                processEntity(
-                    feedId,
-                    data,
-                    pendingMetas,
-                    pendingPayloads,
-                    results
-                );
+                processEntity(feedId, data, pendingEntities, results);
             }
 
-            flushPendingBatch(pendingMetas, pendingPayloads, results);
+            flushPendingBatch(pendingEntities, results);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Worker interrupted", e);
@@ -81,8 +70,7 @@ public class GtfsFilterWorkerService {
     public void processEntity(
         String feedId,
         ByteString data,
-        List<EntityMeta> pendingMetas,
-        List<ByteString> pendingPayloads,
+        List<BatchEntity> pendingEntities,
         List<GtfsFilterService.ConfirmedUpdate> results
     ) throws IOException {
         var scan = GtfsScanner.scanEntity(data.newCodedInput());
@@ -93,11 +81,11 @@ public class GtfsFilterWorkerService {
         var key = feedId + ":" + scan.stableId();
         var currentHash = FeedHashing.hashBytes(data);
 
-        pendingMetas.add(new EntityMeta(key, scan.type(), currentHash));
-        pendingPayloads.add(data);
+        var entity = new BatchEntity(key, scan.type(), currentHash, data);
+        pendingEntities.add(entity);
 
-        if (pendingMetas.size() >= GtfsFilterService.BATCH_SIZE) {
-            flushPendingBatch(pendingMetas, pendingPayloads, results);
+        if (pendingEntities.size() >= GtfsFilterService.BATCH_SIZE) {
+            flushPendingBatch(pendingEntities, results);
         }
     }
 
@@ -109,40 +97,39 @@ public class GtfsFilterWorkerService {
      * @param confirmedUpdates confirmed updates
      */
     public void flushPendingBatch(
-        List<EntityMeta> pendingMetas,
-        List<ByteString> pendingPayloads,
+        List<BatchEntity> pendingEntities,
         List<GtfsFilterService.ConfirmedUpdate> confirmedUpdates
     ) {
-        if (pendingMetas.isEmpty()) {
+        if (pendingEntities.isEmpty()) {
             return;
         }
 
         try {
-            var keys = new ArrayList<String>(pendingMetas.size());
-            for (var meta : pendingMetas) {
-                keys.add(meta.key());
+            var keys = new ArrayList<String>(pendingEntities.size());
+            for (var e : pendingEntities) {
+                keys.add(e.key());
             }
 
             var existingHashes = repository.getHashBatch(keys);
             var redisUpdates = new HashMap<String, Long>(keys.size());
 
-            for (var i = 0; i < pendingMetas.size(); i++) {
-                var meta = pendingMetas.get(i);
+            for (var i = 0; i < pendingEntities.size(); i++) {
+                var e = pendingEntities.get(i);
 
                 var existingHash = existingHashes.get(i);
 
                 var isChanged =
-                    existingHash == null || meta.hash() != existingHash;
+                    existingHash == null || e.hash() != existingHash;
 
                 if (isChanged) {
                     confirmedUpdates.add(
                         new GtfsFilterService.ConfirmedUpdate(
-                            meta.type(),
-                            pendingPayloads.get(i)
+                            e.type(),
+                            pendingEntities.get(i).payload()
                         )
                     );
 
-                    redisUpdates.put(meta.key(), meta.hash());
+                    redisUpdates.put(e.key(), e.hash());
                 }
             }
 
@@ -150,10 +137,14 @@ public class GtfsFilterWorkerService {
         } catch (Exception e) {
             log.error("Failed to process batch", e);
         } finally {
-            pendingMetas.clear();
-            pendingPayloads.clear();
+            pendingEntities.clear();
         }
     }
 
-    private record EntityMeta(String key, int type, long hash) {}
+    private record BatchEntity(
+        String key,
+        int type,
+        long hash,
+        ByteString payload
+    ) {}
 }
