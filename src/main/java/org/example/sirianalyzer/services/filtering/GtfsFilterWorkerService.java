@@ -118,7 +118,11 @@ public class GtfsFilterWorkerService {
         }
 
         try {
-            var keys = pendingMetas.stream().map(EntityMeta::key).toList();
+            var keys = new ArrayList<String>(pendingMetas.size());
+            for (var meta : pendingMetas) {
+                keys.add(meta.key());
+            }
+
             var existingHashes = repository.getHashBatch(keys);
             var redisUpdates = new HashMap<String, Long>(keys.size());
 
