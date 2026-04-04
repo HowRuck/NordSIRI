@@ -1,11 +1,8 @@
 package org.example.sirianalyzer.util;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import com.google.protobuf.ByteString;
 import lombok.NoArgsConstructor;
 import net.openhft.hashing.LongHashFunction;
-import org.example.sirianalyzer.model.EntityHash;
 
 /**
  * Hashing utilities for GTFS FeedEntity objects using Murmur3 128-bit
