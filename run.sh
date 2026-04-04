@@ -1,4 +1,3 @@
 #!/bin/bash
 
-# Script to run the Spring Boot application
-mvn spring-boot:run
+java -Dserver.port=8888 -Dspring.aot.enabled=true -jar target/SiriAnalyzer-0.0.1-SNAPSHOT.jar
