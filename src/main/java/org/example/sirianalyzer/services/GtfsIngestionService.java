@@ -27,6 +27,7 @@ public class GtfsIngestionService {
         isRunning.set(true);
 
         var _ = gtfsPollingService.pollStream();
+        var _ = gtfsPollingService.downloadToBytes();
 
         isRunning.set(false);
     }

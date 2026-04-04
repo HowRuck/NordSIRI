@@ -4,6 +4,7 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.ByteString;
 import lombok.NoArgsConstructor;
+import net.openhft.hashing.LongHashFunction;
 import org.example.sirianalyzer.model.EntityHash;
 
 /**
@@ -12,7 +13,7 @@ import org.example.sirianalyzer.model.EntityHash;
 @NoArgsConstructor
 public final class FeedHashing {
 
-    private static final HashFunction STATE_HASHER = Hashing.murmur3_128();
+    private static final LongHashFunction STATE_HASHER = LongHashFunction.xx();
 
     /**
      * Hash the raw bytes of a GTFS entity
@@ -20,9 +21,9 @@ public final class FeedHashing {
      * @param rawBytes Raw bytes of the GTFS entity
      * @return Hash of the raw bytes
      */
-    public static EntityHash hashBytes(ByteString rawBytes) {
-        var roBuffer = rawBytes.asReadOnlyByteBuffer();
+    public static long hashBytes(ByteString rawBytes) {
+        var roBuffer = rawBytes.toByteArray();
 
-        return new EntityHash(STATE_HASHER.hashBytes(roBuffer).asBytes());
+        return STATE_HASHER.hashBytes(roBuffer);
     }
 }

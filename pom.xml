@@ -79,6 +79,11 @@
             <artifactId>spring-boot-starter-restclient-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>zero-allocation-hashing</artifactId>
+            <version>2026.0</version>
+        </dependency>
     </dependencies>
 
     <build>

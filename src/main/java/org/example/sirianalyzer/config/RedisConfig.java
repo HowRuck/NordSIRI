@@ -42,16 +42,11 @@ public class RedisConfig {
      * @return a RedisTemplate instance
      */
     @Bean
-    public RedisTemplate<String, byte[]> redisTemplate(
+    public RedisTemplate<String, Long> redisTemplate(
         RedisConnectionFactory connectionFactory
     ) {
-        var template = new RedisTemplate<String, byte[]>();
+        var template = new RedisTemplate<String, Long>();
         template.setConnectionFactory(connectionFactory);
-        template.setKeySerializer(RedisSerializer.string());
-        template.setValueSerializer(RedisSerializer.byteArray());
-        template.setHashKeySerializer(RedisSerializer.string());
-        template.setHashValueSerializer(RedisSerializer.byteArray());
-        template.setDefaultSerializer(RedisSerializer.byteArray());
         return template;
     }
 }
