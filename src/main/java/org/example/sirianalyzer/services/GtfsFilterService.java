@@ -55,7 +55,15 @@ public class GtfsFilterService {
         var timerSample = Timer.start(registry);
 
         try {
-            return filterInternal(feedId, rawStream);
+            var cis = CodedInputStream.newInstance(
+                new BufferedInputStream(rawStream)
+            );
+
+            var confirmedUpdates = processEntitiesInBatches(cis);
+
+            logSummary(feedId, lastSeenCount, confirmedUpdates, 0L);
+
+            return confirmedUpdates;
         } finally {
             timerSample.stop(
                 registry.timer("gtfs.filter.latency", "source", feedId)
@@ -63,60 +71,24 @@ public class GtfsFilterService {
         }
     }
 
-    /**
-     * Internally filters a GTFS feed stream, returning a list of confirmed updates
-     *
-     * <p>
-     * This method reads the raw GTFS feed stream, filters out entities that have
-     * not changed since the last feed, and returns a list of confirmed updates.
-     * </p>
-     *
-     * @param feedId The feed ID to associate with the updates
-     * @param rawStream The raw GTFS feed stream to filter
-     *
-     * @return A list of confirmed updates
-     *
-     * @throws IOException If an error occurs while reading the stream
-     */
-    private List<BatchEntity> filterInternal(
-        String feedId,
-        InputStream rawStream
-    ) throws IOException {
-        var cis = CodedInputStream.newInstance(
-            new BufferedInputStream(rawStream)
-        );
-
-        var totalSeen = 0;
-        var totalStallNanos = 0L;
-
-        var confirmedUpdates = produceWork(cis);
-
-        logSummary(feedId, totalSeen, confirmedUpdates, totalStallNanos);
-
-        return confirmedUpdates;
-    }
-
-    /** Tracks the number of entities seen so far during the produceWork phase */
     private int lastSeenCount;
 
     /**
-     * Reads entities from the CodedInputStream and adds them to the work queue
+     * Reads entities from the CodedInputStream and processes them in batches
      *
      * @param cis The CodedInputStream to read from
-     * @param workQueue The work queue to add entities to
-     * @return The total stall time in nanoseconds
-     *
+     * @return List of confirmed updates after filtering
      * @throws IOException If an error occurs while reading from the CodedInputStream
      */
-    private List<BatchEntity> produceWork(CodedInputStream cis)
+    private List<BatchEntity> processEntitiesInBatches(CodedInputStream cis)
         throws IOException {
         var seen = 0;
-        var feedId = "";
-
         var batch = new ArrayList<ByteString>(BATCH_SIZE);
         var batchFutures = new ArrayList<
             CompletableFuture<List<BatchEntity>>
         >();
+
+        var feedId = "testing";
 
         while (!cis.isAtEnd()) {
             var tag = cis.readTag();
@@ -127,37 +99,51 @@ public class GtfsFilterService {
             }
 
             seen++;
-            var data = cis.readBytes();
-            batch.add(data);
+            batch.add(cis.readBytes());
 
             if (batch.size() == BATCH_SIZE) {
-                var batchCopy = new ArrayList<>(batch);
-
-                var future = CompletableFuture.supplyAsync(
-                    () -> workerService.processBatch(feedId, batchCopy),
-                    executorService
-                );
-                batchFutures.add(future);
+                submitBatchForProcessing(feedId, batch, batchFutures);
                 batch.clear();
             }
         }
 
         if (!batch.isEmpty()) {
-            var future = CompletableFuture.supplyAsync(
-                () -> workerService.processBatch(feedId, batch),
-                executorService
-            );
-            batchFutures.add(future);
+            submitBatchForProcessing(feedId, batch, batchFutures);
         }
 
+        return consolidateBatchResults(batchFutures, seen);
+    }
+
+    /**
+     * Processes a batch asynchronously and adds the future to the list
+     */
+    private void submitBatchForProcessing(
+        String feedId,
+        List<ByteString> batch,
+        List<CompletableFuture<List<BatchEntity>>> batchFutures
+    ) {
+        var batchCopy = new ArrayList<>(batch);
+        var future = CompletableFuture.supplyAsync(
+            () -> workerService.processBatch(feedId, batchCopy),
+            executorService
+        );
+        batchFutures.add(future);
+    }
+
+    /**
+     * Collects and consolidates results from all batch futures
+     */
+    private List<BatchEntity> consolidateBatchResults(
+        List<CompletableFuture<List<BatchEntity>>> batchFutures,
+        int seen
+    ) {
         var confirmedUpdates = Collections.synchronizedList(
             new ArrayList<BatchEntity>(lastSeenCount)
         );
 
         var startNanos = System.nanoTime();
         for (var future : batchFutures) {
-            var updates = future.join();
-            confirmedUpdates.addAll(updates);
+            confirmedUpdates.addAll(future.join());
         }
         var totalStallNanos = System.nanoTime() - startNanos;
 
@@ -167,7 +153,6 @@ public class GtfsFilterService {
         );
 
         lastSeenCount = seen;
-
         return confirmedUpdates;
     }
 
