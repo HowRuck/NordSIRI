@@ -23,21 +23,21 @@ public class GtfsFilterWorkerService {
     /**
      * Processes a single entity payload and appends it to the pending batch.
      *
-     * @param feedId the feed identifier
+     * @param keyPrefix the prefix for the entity key (e.g. feedId + ":")
      * @param data the entity payload
      * @param pendingMetas pending entity metadata
      * @param pendingPayloads pending payloads
      * @param results confirmed updates
      * @throws IOException if scanning fails
      */
-    public BatchEntity processEntity(String feedId, ByteString data)
+    public BatchEntity processEntity(String keyPrefix, ByteString data)
         throws IOException {
         var scan = GtfsScanner.scanEntity(data.newCodedInput());
         if (scan.stableId() == null) {
             return null;
         }
 
-        var key = feedId + ":" + scan.stableId();
+        var key = keyPrefix + scan.stableId();
         var currentHash = FeedHashing.hashBytes(data);
 
         var entity = new BatchEntity(key, scan.type(), currentHash, data);
@@ -51,11 +51,13 @@ public class GtfsFilterWorkerService {
     ) {
         log.info("Processing batch of {} entities", data.size());
 
+        var keyPrefix = feedId + ":";
+
         var pendingEntities = data
             .parallelStream()
             .map(d -> {
                 try {
-                    return processEntity(feedId, d);
+                    return processEntity(keyPrefix, d);
                 } catch (IOException e) {
                     log.error("Failed to scan entity", e);
                     return null;
