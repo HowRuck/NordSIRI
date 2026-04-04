@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sirianalyzer.proto.GtfsScanner;
@@ -50,19 +51,18 @@ public class GtfsFilterWorkerService {
     ) {
         log.info("Processing batch of {} entities", data.size());
 
-        var pendingEntities = new ArrayList<BatchEntity>(data.size());
-
-        for (var d : data) {
-            try {
-                var entity = processEntity(feedId, d);
-
-                if (entity != null) {
-                    pendingEntities.add(entity);
+        var pendingEntities = data
+            .parallelStream()
+            .map(d -> {
+                try {
+                    return processEntity(feedId, d);
+                } catch (IOException e) {
+                    log.error("Failed to scan entity", e);
+                    return null;
                 }
-            } catch (IOException e) {
-                log.error("Failed to scan entity", e);
-            }
-        }
+            })
+            .filter(Objects::nonNull)
+            .toList();
 
         return filterChangedEntities(pendingEntities);
     }
