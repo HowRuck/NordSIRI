@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sirianalyzer.services.filtering.GtfsFilterWorkerService;
+import org.example.sirianalyzer.services.filtering.GtfsFilterWorkerService.BatchEntity;
 import org.example.sirianalyzer.util.SizeFormat;
 import org.springframework.stereotype.Service;
 
@@ -35,11 +36,6 @@ public class GtfsFilterService {
     private final GtfsFilterWorkerService workerService;
 
     /**
-     * Represents a confirmed update to a GTFS entity
-     */
-    public record ConfirmedUpdate(int type, ByteString data) {}
-
-    /**
      * Filters a GTFS feed stream, returning a list of confirmed updates
      *
      * <p>
@@ -54,7 +50,7 @@ public class GtfsFilterService {
      *
      * @throws IOException If an error occurs while reading the stream
      */
-    public List<ConfirmedUpdate> filter(String feedId, InputStream rawStream)
+    public List<BatchEntity> filter(String feedId, InputStream rawStream)
         throws IOException {
         var timerSample = Timer.start(registry);
 
@@ -82,7 +78,7 @@ public class GtfsFilterService {
      *
      * @throws IOException If an error occurs while reading the stream
      */
-    private List<ConfirmedUpdate> filterInternal(
+    private List<BatchEntity> filterInternal(
         String feedId,
         InputStream rawStream
     ) throws IOException {
@@ -112,14 +108,14 @@ public class GtfsFilterService {
      *
      * @throws IOException If an error occurs while reading from the CodedInputStream
      */
-    private List<ConfirmedUpdate> produceWork(CodedInputStream cis)
+    private List<BatchEntity> produceWork(CodedInputStream cis)
         throws IOException {
         var seen = 0;
         var feedId = "";
 
         var batch = new ArrayList<ByteString>(BATCH_SIZE);
         var batchFutures = new ArrayList<
-            CompletableFuture<List<ConfirmedUpdate>>
+            CompletableFuture<List<BatchEntity>>
         >();
 
         while (!cis.isAtEnd()) {
@@ -155,7 +151,7 @@ public class GtfsFilterService {
         }
 
         var confirmedUpdates = Collections.synchronizedList(
-            new ArrayList<ConfirmedUpdate>(lastSeenCount)
+            new ArrayList<BatchEntity>(lastSeenCount)
         );
 
         var startNanos = System.nanoTime();
@@ -186,7 +182,7 @@ public class GtfsFilterService {
     private void logSummary(
         String feedId,
         int totalSeen,
-        List<ConfirmedUpdate> confirmedUpdates,
+        List<BatchEntity> confirmedUpdates,
         long totalStallNanos
     ) {
         var stallMs = totalStallNanos / 1_000_000L;
