@@ -1,11 +1,16 @@
 package org.example.sirianalyzer.config;
 
-import io.lettuce.core.RedisClient;
+import java.time.Duration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericToStringSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
  * Configuration class for Redis setup, providing a RedisTemplate bean
@@ -13,15 +18,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 @Configuration
 public class RedisConfig {
 
-    /**
-     * Creates a RedisClient bean for connecting to Redis.
-     *
-     * @return a RedisClient instance
-     */
-    @Bean
-    public RedisClient redisClient() {
-        return RedisClient.create("redis://localhost:6379");
-    }
+    @Value("${spring.data.redis.host:localhost}")
+    private String redisHost;
+
+    @Value("${spring.data.redis.port:6379}")
+    private int redisPort;
 
     /**
      * Creates a RedisConnectionFactory bean for connecting to Redis.
@@ -30,9 +31,22 @@ public class RedisConfig {
      */
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        // Use Lettuce as the Redis client library
-        return new LettuceConnectionFactory();
+        RedisStandaloneConfiguration configuration =
+            new RedisStandaloneConfiguration(redisHost, redisPort);
+
+        // Use LettucePoolingClientConfiguration to manage connections
+        var clientConfig = LettucePoolingClientConfiguration.builder()
+            .commandTimeout(Duration.ofSeconds(2))
+            .shutdownTimeout(Duration.ZERO)
+            .build();
+
+        return new LettuceConnectionFactory(configuration, clientConfig);
     }
+
+    private static final StringRedisSerializer STRING_SERIALIZER =
+        new StringRedisSerializer();
+    private static final GenericToStringSerializer<Long> LONG_SERIALIZER =
+        new GenericToStringSerializer<>(Long.class);
 
     /**
      * Creates a RedisTemplate bean for interacting with Redis.
@@ -46,6 +60,14 @@ public class RedisConfig {
     ) {
         var template = new RedisTemplate<String, Long>();
         template.setConnectionFactory(connectionFactory);
+        template.setEnableDefaultSerializer(false);
+
+        template.setKeySerializer(STRING_SERIALIZER);
+        template.setValueSerializer(LONG_SERIALIZER);
+
+        template.setHashKeySerializer(STRING_SERIALIZER);
+        template.setHashValueSerializer(LONG_SERIALIZER);
+
         return template;
     }
 }
