@@ -16,7 +16,6 @@ import org.springframework.web.client.RestClient;
 public class GtfsPollingService {
 
     private final RestClient restClient;
-    private final String feedUrl;
     private final GtfsFilterService filterService;
 
     /**
@@ -24,12 +23,8 @@ public class GtfsPollingService {
      *
      * @param feedUrl The URL of the GTFS feed to poll
      */
-    public GtfsPollingService(
-        @Value("${gtfs.feed.url}") String feedUrl,
-        GtfsFilterService filterService
-    ) {
-        this.feedUrl = feedUrl;
-        this.restClient = RestClient.create(feedUrl);
+    public GtfsPollingService(GtfsFilterService filterService) {
+        this.restClient = RestClient.create();
         this.filterService = filterService;
     }
 
@@ -38,7 +33,7 @@ public class GtfsPollingService {
      *
      * @return The GTFS feed as a byte array
      */
-    public byte[] downloadToBytes() {
+    public byte[] downloadToBytes(String feedUrl) {
         var startTime = System.currentTimeMillis();
         log.info("Downloading GTFS feed from {}", feedUrl);
 
