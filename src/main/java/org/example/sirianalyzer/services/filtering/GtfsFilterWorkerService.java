@@ -24,40 +24,40 @@ public class GtfsFilterWorkerService {
      * Processes a single entity payload and appends it to the pending batch.
      *
      * @param keyPrefix the prefix for the entity key (e.g. feedId + ":")
-     * @param data the entity payload
+     * @param entityPayload the entity payload
      * @param pendingMetas pending entity metadata
      * @param pendingPayloads pending payloads
      * @param results confirmed updates
      * @throws IOException if scanning fails
      */
-    public BatchEntity processEntity(String keyPrefix, ByteString data)
+    public BatchEntity processEntity(String keyPrefix, ByteString entityPayload)
         throws IOException {
-        var scan = GtfsScanner.scanEntity(data.newCodedInput());
+        var scan = GtfsScanner.scanEntity(entityPayload.newCodedInput());
         if (scan.stableId() == null) {
             return null;
         }
 
         var key = keyPrefix + scan.stableId();
-        var currentHash = FeedHashing.hashBytes(data);
+        var currentHash = FeedHashing.hashBytes(entityPayload);
 
-        var entity = new BatchEntity(key, scan.type(), currentHash, data);
+        var entity = new BatchEntity(key, scan.type(), currentHash, entityPayload);
 
         return entity;
     }
 
     public List<BatchEntity> processBatch(
         String feedId,
-        List<ByteString> data
+        List<ByteString> pendingEntities
     ) {
-        log.info("Processing batch of {} entities", data.size());
+        log.info("Processing batch of {} entities", pendingEntities.size());
 
         var keyPrefix = feedId + ":";
 
-        var pendingEntities = data
+        var processedEntities = pendingEntities
             .parallelStream()
-            .map(d -> {
+            .map(pendingEntity -> {
                 try {
-                    return processEntity(keyPrefix, d);
+                    return processEntity(keyPrefix, pendingEntity);
                 } catch (IOException e) {
                     log.error("Failed to scan entity", e);
                     return null;
@@ -66,7 +66,7 @@ public class GtfsFilterWorkerService {
             .filter(Objects::nonNull)
             .toList();
 
-        return filterChangedEntities(pendingEntities);
+        return filterChangedEntities(processedEntities);
     }
 
     /**
