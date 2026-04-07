@@ -1,12 +1,11 @@
 package org.example.sirianalyzer.services;
 
-import java.util.List;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sirianalyzer.config.GtfsConfig;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +14,8 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class GtfsIngestionService {
 
-    private final GtfsPollingService gtfsPollingService;
-    private final GtfsKafkaProducer gtfsKafkaProducer;
     private final GtfsConfig gtfsConfig;
+    private final GtfsIngestionAsyncService gtfsIngestionAsyncService;
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
 
@@ -33,22 +31,36 @@ public class GtfsIngestionService {
         isRunning.set(true);
         var startTime = System.currentTimeMillis();
 
-        var feeds = gtfsConfig.getFeeds();
+        try {
+            var feeds = gtfsConfig.getFeeds();
 
-        for (var feedId : feeds.keySet()) {
-            var feedUrls = feeds.get(feedId);
+            for (var feedId : feeds.keySet()) {
+                var feedUrls = feeds.get(feedId);
 
-            for (var feedUrl : feedUrls) {
-                var entities = gtfsPollingService.pollStream(feedId, feedUrl);
-                gtfsKafkaProducer.sendTripUpdates(feedId, entities);
+                var futures = new ArrayList<CompletableFuture<Void>>(
+                    feedUrls.size()
+                );
+
+                for (var feedUrl : feedUrls) {
+                    futures.add(
+                        gtfsIngestionAsyncService.processFeedUrlAsync(
+                            feedId,
+                            feedUrl
+                        )
+                    );
+                }
+
+                CompletableFuture.allOf(
+                    futures.toArray(new CompletableFuture[0])
+                ).join();
+
+                log.info("----------");
             }
 
-            log.info("----------");
+            var endTime = System.currentTimeMillis();
+            log.info("Total processing time: {}ms", endTime - startTime);
+        } finally {
+            isRunning.set(false);
         }
-
-        var endTime = System.currentTimeMillis();
-        log.info("Total processing time: {}ms", endTime - startTime);
-
-        isRunning.set(false);
     }
 }
