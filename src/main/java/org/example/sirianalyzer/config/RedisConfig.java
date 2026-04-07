@@ -31,8 +31,10 @@ public class RedisConfig {
      */
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        RedisStandaloneConfiguration configuration =
-            new RedisStandaloneConfiguration(redisHost, redisPort);
+        var configuration = new RedisStandaloneConfiguration(
+            redisHost,
+            redisPort
+        );
 
         // Use LettucePoolingClientConfiguration to manage connections
         var clientConfig = LettucePoolingClientConfiguration.builder()
