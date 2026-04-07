@@ -28,6 +28,12 @@ public class GtfsKafkaProducer {
     @Value("${spring.kafka.topic:gtfs-trip-updates}")
     private String topic;
 
+    /**
+     * Sends a batch of trip updates to Kafka.
+     *
+     * @param feedId the feed ID
+     * @param entities the entities to send
+     */
     public void sendTripUpdates(String feedId, List<BatchEntity> entities) {
         var startTime = System.currentTimeMillis();
         log.info("Sending {} trip updates to Kafka", entities.size());
