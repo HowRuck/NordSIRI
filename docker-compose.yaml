@@ -1,6 +1,6 @@
 services:
     kafka:
-        image: apache/kafka:4.2.0
+        image: docker.io/apache/kafka:4.2.0
         container_name: kafka
         ports:
             - "9092:9092"
@@ -24,25 +24,15 @@ services:
             KAFKA_LOG_CLEANER_THREADS: 2
         volumes:
             - kafka-data:/var/lib/kafka/data
-        networks:
-            - kafka-network
 
-    kafka-ui:
-        image: ghcr.io/kafbat/kafka-ui:latest
-        container_name: kafka-ui
+    redis:
+        image: docker.io/redis:8.6
+        container_name: redis
         ports:
-            - "8000:8080"
-        environment:
-            KAFKA_CLUSTERS_0_NAME: local
-            KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-        depends_on:
-            - kafka
-        networks:
-            - kafka-network
+            - "6379:6379"
+        volumes:
+            - redis-data:/data
 
 volumes:
     kafka-data:
-
-networks:
-    kafka-network:
-        driver: bridge
+    redis-data:
