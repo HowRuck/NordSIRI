@@ -1,5 +1,6 @@
 package org.example.sirianalyzer.services;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.AllArgsConstructor;
@@ -17,15 +18,15 @@ public class GtfsIngestionService {
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
 
-    private final Map<String, String> feeds = Map.of(
-        "gtfs.de_realtime-free",
-        "https://realtime.gtfs.de/realtime-free.pb",
-        "entur_trip-updates",
-        "https://api.entur.io/realtime/v1/gtfs-rt/trip-updates",
-        "entur_alerts",
-        "https://api.entur.io/realtime/v1/gtfs-rt/alerts",
-        "entur_vehicle-positions",
-        "https://api.entur.io/realtime/v1/gtfs-rt/vehicle-positions"
+    private final Map<String, List<String>> feeds = Map.of(
+        "gtfs.de",
+        List.of("https://realtime.gtfs.de/realtime-free.pb"),
+        "entur",
+        List.of(
+            "https://api.entur.io/realtime/v1/gtfs-rt/trip-updates",
+            "https://api.entur.io/realtime/v1/gtfs-rt/alerts",
+            "https://api.entur.io/realtime/v1/gtfs-rt/vehicle-positions"
+        )
     );
 
     @Scheduled(fixedRateString = "${gtfs.fetch.interval-ms}")
@@ -38,16 +39,21 @@ public class GtfsIngestionService {
         }
 
         isRunning.set(true);
+        var startTime = System.currentTimeMillis();
 
-        for (var entry : feeds.entrySet()) {
-            var feedId = entry.getKey();
-            var feedUrl = entry.getValue();
+        for (var feedId : feeds.keySet()) {
+            var feedUrls = feeds.get(feedId);
 
-            var entities = gtfsPollingService.pollStream(feedId, feedUrl);
-            gtfsKafkaProducer.sendTripUpdates(feedId, entities);
+            for (var feedUrl : feedUrls) {
+                var entities = gtfsPollingService.pollStream(feedId, feedUrl);
+                gtfsKafkaProducer.sendTripUpdates(feedId, entities);
+            }
 
             log.info("----------");
         }
+
+        var endTime = System.currentTimeMillis();
+        log.info("Total processing time: {}ms", endTime - startTime);
 
         isRunning.set(false);
     }
