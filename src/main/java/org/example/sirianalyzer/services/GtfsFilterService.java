@@ -35,6 +35,10 @@ public class GtfsFilterService {
     private final MeterRegistry registry;
     private final GtfsFilterWorkerService workerService;
 
+    private ThreadLocal<String> feedIdHolder = ThreadLocal.withInitial(() ->
+        ""
+    );
+
     /**
      * Filters a GTFS feed stream, returning a list of confirmed updates
      *
@@ -53,6 +57,7 @@ public class GtfsFilterService {
     public List<BatchEntity> filter(String feedId, InputStream rawStream)
         throws IOException {
         var timerSample = Timer.start(registry);
+        feedIdHolder.set(feedId);
 
         try {
             var cis = CodedInputStream.newInstance(
@@ -82,13 +87,12 @@ public class GtfsFilterService {
      */
     private List<BatchEntity> processEntitiesInBatches(CodedInputStream cis)
         throws IOException {
+        var feedId = feedIdHolder.get();
         var seen = 0;
         var batch = new ArrayList<ByteString>(BATCH_SIZE);
         var batchFutures = new ArrayList<
             CompletableFuture<List<BatchEntity>>
         >();
-
-        var feedId = "testing";
 
         while (!cis.isAtEnd()) {
             var tag = cis.readTag();

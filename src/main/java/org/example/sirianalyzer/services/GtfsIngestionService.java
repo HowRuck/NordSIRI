@@ -1,5 +1,6 @@
 package org.example.sirianalyzer.services;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,17 @@ public class GtfsIngestionService {
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
 
+    private final Map<String, String> feeds = Map.of(
+        "gtfs.de_realtime-free",
+        "https://realtime.gtfs.de/realtime-free.pb",
+        "entur_trip-updates",
+        "https://api.entur.io/realtime/v1/gtfs-rt/trip-updates",
+        "entur_alerts",
+        "https://api.entur.io/realtime/v1/gtfs-rt/alerts",
+        "entur_vehicle-positions",
+        "https://api.entur.io/realtime/v1/gtfs-rt/vehicle-positions"
+    );
+
     @Scheduled(fixedRateString = "${gtfs.fetch.interval-ms}")
     public void process() {
         if (isRunning.get()) {
@@ -27,10 +39,15 @@ public class GtfsIngestionService {
 
         isRunning.set(true);
 
-        var entities = gtfsPollingService.pollStream();
-        var _ = gtfsPollingService.downloadToBytes();
+        for (var entry : feeds.entrySet()) {
+            var feedId = entry.getKey();
+            var feedUrl = entry.getValue();
 
-        gtfsKafkaProducer.sendTripUpdates("testFeed", entities);
+            var entities = gtfsPollingService.pollStream(feedId, feedUrl);
+            gtfsKafkaProducer.sendTripUpdates(feedId, entities);
+
+            log.info("----------");
+        }
 
         isRunning.set(false);
     }

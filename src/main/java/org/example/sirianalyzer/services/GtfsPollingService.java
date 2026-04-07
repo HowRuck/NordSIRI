@@ -62,9 +62,13 @@ public class GtfsPollingService {
         }
     }
 
-    public List<BatchEntity> pollStream() {
+    public List<BatchEntity> pollStream(String feedId, String feedUrl) {
         var startTime = System.currentTimeMillis();
-        log.info("Polling GTFS feed stream from {}", feedUrl);
+        log.info(
+            "Polling GTFS feed stream for feed {} from {}",
+            feedId,
+            feedUrl
+        );
 
         try {
             return restClient

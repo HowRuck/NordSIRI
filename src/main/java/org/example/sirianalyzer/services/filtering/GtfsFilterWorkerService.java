@@ -40,7 +40,12 @@ public class GtfsFilterWorkerService {
         var key = keyPrefix + scan.stableId();
         var currentHash = FeedHashing.hashBytes(entityPayload);
 
-        var entity = new BatchEntity(key, scan.type(), currentHash, entityPayload);
+        var entity = new BatchEntity(
+            key,
+            scan.type(),
+            currentHash,
+            entityPayload
+        );
 
         return entity;
     }
@@ -49,8 +54,6 @@ public class GtfsFilterWorkerService {
         String feedId,
         List<ByteString> pendingEntities
     ) {
-        log.info("Processing batch of {} entities", pendingEntities.size());
-
         var keyPrefix = feedId + ":";
 
         var processedEntities = pendingEntities

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.sirianalyzer.services.filtering.GtfsFilterWorkerService.BatchEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
@@ -34,6 +35,7 @@ public class GtfsKafkaProducer {
      * @param feedId the feed ID
      * @param entities the entities to send
      */
+    @Async
     public void sendTripUpdates(String feedId, List<BatchEntity> entities) {
         var startTime = System.currentTimeMillis();
         log.info("Sending {} trip updates to Kafka", entities.size());
