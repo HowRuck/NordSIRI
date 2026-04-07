@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.sirianalyzer.config.GtfsConfig;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -15,19 +17,9 @@ public class GtfsIngestionService {
 
     private final GtfsPollingService gtfsPollingService;
     private final GtfsKafkaProducer gtfsKafkaProducer;
+    private final GtfsConfig gtfsConfig;
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
-
-    private final Map<String, List<String>> feeds = Map.of(
-        "gtfs.de",
-        List.of("https://realtime.gtfs.de/realtime-free.pb"),
-        "entur",
-        List.of(
-            "https://api.entur.io/realtime/v1/gtfs-rt/trip-updates",
-            "https://api.entur.io/realtime/v1/gtfs-rt/alerts",
-            "https://api.entur.io/realtime/v1/gtfs-rt/vehicle-positions"
-        )
-    );
 
     @Scheduled(fixedRateString = "${gtfs.fetch.interval-ms}")
     public void process() {
@@ -40,6 +32,8 @@ public class GtfsIngestionService {
 
         isRunning.set(true);
         var startTime = System.currentTimeMillis();
+
+        var feeds = gtfsConfig.getFeeds();
 
         for (var feedId : feeds.keySet()) {
             var feedUrls = feeds.get(feedId);
