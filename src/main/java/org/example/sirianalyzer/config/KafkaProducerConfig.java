@@ -1,6 +1,7 @@
 package org.example.sirianalyzer.config;
 
 import java.util.HashMap;
+import java.util.Map;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -30,7 +31,7 @@ public class KafkaProducerConfig {
      */
     @Bean
     public ProducerFactory<String, byte[]> producerFactory() {
-        var configProps = new HashMap<String, Object>();
+        Map<String, Object> configProps = new HashMap<>();
 
         // Initialize Kafka producer configuration properties
         configProps.put(
@@ -46,8 +47,12 @@ public class KafkaProducerConfig {
             ByteArraySerializer.class
         );
 
-        // Performance optimizations
+        // Performance optimizations for batching and compression
         configProps.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "lz4");
+        configProps.put(ProducerConfig.LINGER_MS_CONFIG, 20);
+        configProps.put(ProducerConfig.BATCH_SIZE_CONFIG, 32768);
+        configProps.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, 120000);
+        configProps.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 30000);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }

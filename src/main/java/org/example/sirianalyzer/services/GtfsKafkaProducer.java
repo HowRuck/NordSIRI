@@ -1,7 +1,10 @@
 package org.example.sirianalyzer.services;
 
 import com.google.transit.realtime.GtfsRealtime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.sirianalyzer.services.filtering.GtfsFilterWorkerService.BatchEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Service;
  * Kafka producer for GTFS trip updates
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class GtfsKafkaProducer {
 
@@ -21,8 +25,24 @@ public class GtfsKafkaProducer {
     /**
      * Kafka topic to send messages to
      */
-    @Value("${spring.kafka.topic}")
-    private final String topic = "gtfs-trip-updates";
+    @Value("${spring.kafka.topic:gtfs-trip-updates}")
+    private String topic;
+
+    public void sendTripUpdates(String feedId, List<BatchEntity> entities) {
+        var startTime = System.currentTimeMillis();
+        log.info("Sending {} trip updates to Kafka", entities.size());
+
+        for (BatchEntity entity : entities) {
+            kafka.send(topic, feedId, entity.payload().toByteArray());
+        }
+
+        var endTime = System.currentTimeMillis();
+        log.info(
+            "Sent {} trip updates to Kafka in {}ms",
+            entities.size(),
+            endTime - startTime
+        );
+    }
 
     /**
      * Send a GTFS trip update to Kafka

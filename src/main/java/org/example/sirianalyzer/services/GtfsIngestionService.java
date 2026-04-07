@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 public class GtfsIngestionService {
 
     private final GtfsPollingService gtfsPollingService;
+    private final GtfsKafkaProducer gtfsKafkaProducer;
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
 
@@ -26,8 +27,10 @@ public class GtfsIngestionService {
 
         isRunning.set(true);
 
-        var _ = gtfsPollingService.pollStream();
+        var entities = gtfsPollingService.pollStream();
         var _ = gtfsPollingService.downloadToBytes();
+
+        gtfsKafkaProducer.sendTripUpdates("testFeed", entities);
 
         isRunning.set(false);
     }
