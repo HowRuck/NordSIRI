@@ -2,8 +2,6 @@ package org.example.sirianalyzer.services.filtering;
 
 import com.google.protobuf.ByteString;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -87,40 +85,18 @@ public class GtfsFilterWorkerService {
         }
 
         try {
-            var keys = new ArrayList<String>(pendingEntities.size());
-            for (var e : pendingEntities) {
-                keys.add(e.key());
-            }
+            var keys = pendingEntities.stream().map(BatchEntity::key).toList();
+            var values = pendingEntities
+                .stream()
+                .map(BatchEntity::hash)
+                .toList();
 
-            var existingHashes = repository.getHashBatch(keys);
+            var changedKeys = repository.syncHashes(keys, values);
 
-            var changedEntities = new ArrayList<BatchEntity>(
-                pendingEntities.size()
-            );
-
-            for (var i = 0; i < pendingEntities.size(); i++) {
-                var e = pendingEntities.get(i);
-
-                var existingHash = existingHashes.get(i);
-
-                var isChanged =
-                    existingHash == null || e.hash() != existingHash;
-
-                if (isChanged) {
-                    changedEntities.add(e);
-                }
-            }
-
-            var redisUpdates = new HashMap<String, Long>(
-                changedEntities.size()
-            );
-            for (var e : changedEntities) {
-                redisUpdates.put(e.key(), e.hash());
-            }
-
-            repository.upsertBatch("test", redisUpdates);
-
-            return changedEntities;
+            return pendingEntities
+                .stream()
+                .filter(e -> changedKeys.contains(e.key()))
+                .toList();
         } catch (Exception e) {
             log.error("Failed to process batch", e);
         }

@@ -65,10 +65,10 @@ public class RedisConfig {
         template.setEnableDefaultSerializer(false);
 
         template.setKeySerializer(STRING_SERIALIZER);
-        template.setValueSerializer(LONG_SERIALIZER);
+        template.setValueSerializer(STRING_SERIALIZER);
 
         template.setHashKeySerializer(STRING_SERIALIZER);
-        template.setHashValueSerializer(LONG_SERIALIZER);
+        template.setHashValueSerializer(STRING_SERIALIZER);
 
         return template;
     }
