@@ -1,10 +1,10 @@
 package org.example.sirianalyzer.services;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sirianalyzer.services.filtering.GtfsFilterWorkerService.BatchEntity;
 import org.example.sirianalyzer.util.SizeFormat;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -13,20 +13,11 @@ import org.springframework.web.client.RestClient;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class GtfsPollingService {
 
-    private final RestClient restClient;
+    private final RestClient restClient = RestClient.create();
     private final GtfsFilterService filterService;
-
-    /**
-     * Creates a new GTFS polling service with the provided feed URL
-     *
-     * @param feedUrl The URL of the GTFS feed to poll
-     */
-    public GtfsPollingService(GtfsFilterService filterService) {
-        this.restClient = RestClient.create();
-        this.filterService = filterService;
-    }
 
     /**
      * Downloads the GTFS feed from the configured URL and returns it as a byte array
@@ -82,7 +73,7 @@ public class GtfsPollingService {
                     );
 
                     try (var inputStream = response.getBody()) {
-                        return filterService.filter("testFeedId", inputStream);
+                        return filterService.filter(feedId, inputStream);
                     } finally {
                         log.info(
                             "Finished processing GTFS feed stream in {} ms",
