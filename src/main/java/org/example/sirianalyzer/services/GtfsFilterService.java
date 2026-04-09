@@ -94,7 +94,12 @@ public class GtfsFilterService {
             CompletableFuture<List<BatchEntity>>
         >();
 
+        var readLatencySum = 0L;
+        var pullLatencySum = 0L;
+        var processLatencySum = 0L;
+
         while (!cis.isAtEnd()) {
+            var startRead = System.nanoTime();
             var tag = cis.readTag();
 
             if (WireFormat.getTagFieldNumber(tag) != ENTITY_FIELD_NUMBER) {
@@ -102,18 +107,39 @@ public class GtfsFilterService {
                 continue;
             }
 
+            var endRead = System.nanoTime();
+            var readLatency = endRead - startRead;
+            readLatencySum += readLatency;
+
+            var startPull = System.nanoTime();
             seen++;
             batch.add(cis.readBytes());
+            var endPull = System.nanoTime();
+            var pullLatency = endPull - startPull;
+            pullLatencySum += pullLatency;
+
+            var startProcess = System.nanoTime();
 
             if (batch.size() == BATCH_SIZE) {
                 submitBatchForProcessing(feedId, batch, batchFutures);
                 batch.clear();
             }
+
+            var endProcess = System.nanoTime();
+            var processLatency = endProcess - startProcess;
+            processLatencySum += processLatency;
         }
 
         if (!batch.isEmpty()) {
             submitBatchForProcessing(feedId, batch, batchFutures);
         }
+
+        log.info(
+            "Read latency: {}ms, pull latency: {}ms, process latency: {}ms",
+            readLatencySum / 1_000_000L,
+            pullLatencySum / 1_000_000L,
+            processLatencySum / 1_000_000L
+        );
 
         return consolidateBatchResults(batchFutures, seen);
     }
