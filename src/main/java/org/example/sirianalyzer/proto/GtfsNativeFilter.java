@@ -1,6 +1,7 @@
 package org.example.sirianalyzer.proto;
 
 import com.google.protobuf.CodedInputStream;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -114,7 +115,10 @@ public class GtfsNativeFilter {
         String feedUrl,
         InputStream is
     ) throws IOException {
-        var cis = CodedInputStream.newInstance(is);
+        var bufferSize = 4 * 1024 * 1024; // 4 MB buffer size
+        var cis = CodedInputStream.newInstance(
+            new BufferedInputStream(is, bufferSize)
+        );
 
         var feedIdChars = feedId.toCharArray();
 
