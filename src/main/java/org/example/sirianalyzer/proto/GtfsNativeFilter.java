@@ -27,7 +27,7 @@ public class GtfsNativeFilter {
     private final LongHashFunction hashFunction = LongHashFunction.xx3();
     private int lastUpdateCount = 10_000;
 
-    public record TypedEntity(ByteBuffer bytes, long hash) {}
+    public record TypedEntity(byte[] bytes, long hash) {}
 
     /**
      * Check if the feed header has changed and update the state store if it has
@@ -43,7 +43,7 @@ public class GtfsNativeFilter {
     private boolean checkHeaderChanged(
         String feedId,
         String feedUrl,
-        ByteBuffer buffer
+        byte[] buffer
     ) throws IOException {
         var headerKey = hashFunction.hashChars(feedId + feedUrl);
         var headerHash = hashFunction.hashBytes(buffer);
@@ -70,7 +70,7 @@ public class GtfsNativeFilter {
      * @throws IOException If an error occurs while reading the entity
      */
     private TypedEntity processFeedEntity(
-        ByteBuffer entityBytes,
+        byte[] entityBytes,
         char[] feedIdChars,
         char[] feedIdWithPadding
     ) throws IOException {
@@ -145,7 +145,7 @@ public class GtfsNativeFilter {
             if (fieldNumber == 0) {
                 break;
             } else if (fieldNumber == 1) {
-                var headerBytes = cis.readByteBuffer();
+                var headerBytes = cis.readByteArray();
 
                 if (!checkHeaderChanged(feedId, feedUrl, headerBytes)) {
                     log.info("Header hash matches existing hash, breaking");
@@ -153,7 +153,7 @@ public class GtfsNativeFilter {
                     break;
                 }
             } else if (fieldNumber == 2) {
-                var entityBytes = cis.readByteBuffer();
+                var entityBytes = cis.readByteArray();
                 var typedEntity = processFeedEntity(
                     entityBytes,
                     feedIdChars,
