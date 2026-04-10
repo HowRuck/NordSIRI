@@ -44,7 +44,7 @@ public class GtfsKafkaProducer {
         log.info("Sending {} trip updates to Kafka", entities.size());
 
         for (GtfsNativeFilter.TypedEntity entity : entities) {
-            kafka.send(topic, feedId, entity.bytes().array());
+            kafka.send(topic, feedId, entity.bytes());
         }
 
         var endTime = System.currentTimeMillis();
