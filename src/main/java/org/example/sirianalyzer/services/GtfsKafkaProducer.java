@@ -4,7 +4,7 @@ import com.google.transit.realtime.GtfsRealtime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sirianalyzer.services.filtering.GtfsFilterWorkerService.BatchEntity;
+import org.example.sirianalyzer.proto.GtfsNativeFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -36,12 +36,15 @@ public class GtfsKafkaProducer {
      * @param entities the entities to send
      */
     @Async
-    public void sendTripUpdates(String feedId, List<BatchEntity> entities) {
+    public void sendTripUpdates(
+        String feedId,
+        List<GtfsNativeFilter.TypedEntity> entities
+    ) {
         var startTime = System.currentTimeMillis();
         log.info("Sending {} trip updates to Kafka", entities.size());
 
-        for (BatchEntity entity : entities) {
-            kafka.send(topic, feedId, entity.payload().toByteArray());
+        for (GtfsNativeFilter.TypedEntity entity : entities) {
+            kafka.send(topic, feedId, entity.bytes().array());
         }
 
         var endTime = System.currentTimeMillis();
