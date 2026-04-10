@@ -159,6 +159,7 @@ public class GtfsNativeFilter {
                     feedIdChars,
                     feedIdWithPadding
                 );
+                numEntities++;
 
                 if (typedEntity != null) {
                     changedEntities.add(typedEntity);
