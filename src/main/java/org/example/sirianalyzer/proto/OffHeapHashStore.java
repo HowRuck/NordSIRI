@@ -10,6 +10,7 @@ import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
@@ -39,9 +40,13 @@ public class OffHeapHashStore {
     private final VarHandle valueHandle;
     private final VarHandle expiresAtHandle;
 
+    private volatile long currentMinuteMs;
+
     public OffHeapHashStore() {
         arena = Arena.ofShared();
         segment = arena.allocate(SLOTS * SLOT_SIZE);
+
+        currentMinuteMs = System.currentTimeMillis();
 
         var slotLayout = MemoryLayout.structLayout(
             ValueLayout.JAVA_LONG.withName("key"),
@@ -150,7 +155,7 @@ public class OffHeapHashStore {
     public long put(long key, long value) {
         var startIndex = computeIndex(key);
         var index = startIndex;
-        var expiresAt = safeAdd(System.currentTimeMillis(), TTL_MILLIS);
+        var expiresAt = safeAdd(currentMinuteMs, TTL_MILLIS);
 
         // Probe for an empty slot or our key (update), or an expired slot
         while (true) {
@@ -276,7 +281,7 @@ public class OffHeapHashStore {
      * @return {@code true} if the expiration time is in the past, {@code false} otherwise
      */
     private boolean isExpired(long expiresAt) {
-        return expiresAt <= System.currentTimeMillis();
+        return expiresAt <= currentMinuteMs;
     }
 
     /**
@@ -300,5 +305,11 @@ public class OffHeapHashStore {
      */
     private static long safeAdd(long left, long right) {
         return Math.addExact(left, right);
+    }
+
+    @Scheduled(fixedRate = 60000) // Update every minute
+    public void updateCurrentMinute() {
+        log.info("Updating current minute: {}", currentMinuteMs);
+        currentMinuteMs = System.currentTimeMillis();
     }
 }
