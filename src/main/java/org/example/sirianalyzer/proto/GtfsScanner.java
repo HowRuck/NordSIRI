@@ -25,7 +25,7 @@ public class GtfsScanner {
     /**
      * Represents the result of scanning a GTFS-RT entity, including the stable ID and entity type
      */
-    public record ScanResult(char[] id, int type) {}
+    public record ScanResult(String id, int type) {}
 
     /**
      * Scans a GTFS-RT entity and returns the result, including the stable ID and entity type
@@ -36,7 +36,7 @@ public class GtfsScanner {
      */
     public static ScanResult scanEntity(CodedInputStream cis)
         throws IOException {
-        char[] stableId = null;
+        String stableId = null;
         int entityType = -1;
 
         while (!cis.isAtEnd()) {
@@ -46,9 +46,7 @@ public class GtfsScanner {
             // Switch on the field number to determine how to read the value
             switch (fieldNumber) {
                 // Read the stable ID from the feed entity field
-                case FIELD_FEED_ENTITY -> stableId = cis
-                    .readString()
-                    .toCharArray();
+                case FIELD_FEED_ENTITY -> stableId = cis.readString();
                 // Read the stable ID from the nested trip descriptor
                 case FIELD_TRIP_UPDATE, FIELD_VEHICLE_POSITION -> {
                     entityType = fieldNumber;
@@ -73,8 +71,8 @@ public class GtfsScanner {
      * @return the stable ID of the entity, or null if not found
      * @throws IOException if an error occurs while reading from the stream
      */
-    public static char[] findEntityId(CodedInputStream cis) throws IOException {
-        char[] stableId = null;
+    public static String findEntityId(CodedInputStream cis) throws IOException {
+        String stableId = null;
 
         // Loop through the fields of the entity, looking for the trip descriptor
         while (!cis.isAtEnd()) {
@@ -98,7 +96,7 @@ public class GtfsScanner {
      * @return the stable ID of the trip, or null if not found
      * @throws IOException if an error occurs while reading from the stream
      */
-    public static char[] parseNestedTripDescriptor(CodedInputStream cis)
+    public static String parseNestedTripDescriptor(CodedInputStream cis)
         throws IOException {
         // Read the length of the trip descriptor and set the limit
         var length = cis.readRawVarint32();
@@ -153,10 +151,6 @@ public class GtfsScanner {
         // Return the trip ID and start date, separated by a colon
         return tripId == null
             ? null
-            : (
-                  tripId +
-                  ":" +
-                  (startDate == null ? "" : startDate)
-              ).toCharArray();
+            : (tripId + ":" + (startDate == null ? "" : startDate));
     }
 }

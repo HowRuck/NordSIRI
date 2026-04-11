@@ -68,27 +68,22 @@ public class GtfsNativeFilter {
      *
      * @throws IOException If an error occurs while reading the entity
      */
-    private TypedEntity processFeedEntity(
-        byte[] entityBytes,
-        char[] feedIdChars,
-        char[] feedIdWithPadding
-    ) throws IOException {
+    private TypedEntity processFeedEntity(byte[] entityBytes, String feedId)
+        throws IOException {
         var entityCis = CodedInputStream.newInstance(entityBytes);
         var scanResult = GtfsScanner.scanEntity(entityCis);
 
-        // Construct a unique entity ID based on the feed ID and the entity's ID
-        System.arraycopy(
-            scanResult.id(),
-            0,
-            feedIdWithPadding,
-            feedIdChars.length,
-            scanResult.id().length
-        );
+        var entityId = feedId + ":" + scanResult.id();
 
-        var hashedId = hashFunction.hashChars(feedIdWithPadding);
+        var hashedId = hashFunction.hashBytes(entityId.getBytes());
         var hashedBytes = hashFunction.hashBytes(entityBytes);
 
         var existingHash = stateStore.get(hashedId);
+
+        if (existingHash == OffHeapHashStore.EMPTY_VALUE) {
+            stateStore.put(hashedId, hashedBytes);
+            return new TypedEntity(entityBytes, hashedBytes);
+        }
 
         if (hashedBytes == existingHash) {
             return null;
@@ -153,11 +148,7 @@ public class GtfsNativeFilter {
                 }
             } else if (fieldNumber == 2) {
                 var entityBytes = cis.readByteArray();
-                var typedEntity = processFeedEntity(
-                    entityBytes,
-                    feedIdChars,
-                    feedIdWithPadding
-                );
+                var typedEntity = processFeedEntity(entityBytes, feedId);
                 numEntities++;
 
                 if (typedEntity != null) {
