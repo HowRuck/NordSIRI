@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.openhft.hashing.LongHashFunction;
 import org.apache.kafka.shaded.com.google.protobuf.WireFormat;
 import org.example.sirianalyzer.util.SizeFormat;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -27,6 +28,9 @@ public class GtfsNativeFilter {
     private int lastUpdateCount = 10_000;
 
     public record TypedEntity(byte[] bytes, long hash) {}
+
+    @Value("${gtfs.readBufferSize:8}")
+    private int readBufferSizeMb;
 
     /**
      * Check if the feed header has changed and update the state store if it has
@@ -109,7 +113,7 @@ public class GtfsNativeFilter {
         String feedUrl,
         InputStream is
     ) throws IOException {
-        var bufferSize = 4 * 1024 * 1024; // 4 MB buffer size
+        var bufferSize = readBufferSizeMb * 1024 * 1024;
         var cis = CodedInputStream.newInstance(
             new BufferedInputStream(is, bufferSize)
         );
