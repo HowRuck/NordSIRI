@@ -118,19 +118,6 @@ public class GtfsNativeFilter {
             new BufferedInputStream(is, bufferSize)
         );
 
-        var feedIdChars = feedId.toCharArray();
-
-        var maxIdLength = 128 * 4;
-        var feedIdWithPadding = new char[feedIdChars.length + maxIdLength];
-
-        System.arraycopy(
-            feedIdChars,
-            0,
-            feedIdWithPadding,
-            0,
-            feedIdChars.length
-        );
-
         var changedEntities = new ArrayList<TypedEntity>(lastUpdateCount);
 
         var numEntities = 0;
