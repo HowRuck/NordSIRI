@@ -1,10 +1,10 @@
-package org.example.sirianalyzer.services;
+package org.example.gtfsynq.application.service;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sirianalyzer.proto.GtfsNativeFilter;
-import org.example.sirianalyzer.util.SizeFormat;
+import org.example.gtfsynq.infrastructure.protobuf.GtfsNativeFilter;
+import org.example.gtfsynq.util.SizeFormat;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 

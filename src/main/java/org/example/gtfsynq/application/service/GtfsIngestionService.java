@@ -1,11 +1,11 @@
-package org.example.sirianalyzer.services;
+package org.example.gtfsynq.application.service;
 
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sirianalyzer.config.GtfsConfig;
+import org.example.gtfsynq.infrastructure.config.GtfsConfig;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 

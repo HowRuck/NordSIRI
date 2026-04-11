@@ -1,10 +1,10 @@
-package org.example.sirianalyzer.services;
+package org.example.gtfsynq.application.service;
 
 import com.google.transit.realtime.GtfsRealtime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sirianalyzer.proto.GtfsNativeFilter;
+import org.example.gtfsynq.infrastructure.protobuf.GtfsNativeFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;

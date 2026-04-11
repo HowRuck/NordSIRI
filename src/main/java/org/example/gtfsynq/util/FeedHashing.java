@@ -1,4 +1,4 @@
-package org.example.sirianalyzer.util;
+package org.example.gtfsynq.util;
 
 import com.google.protobuf.ByteString;
 import lombok.NoArgsConstructor;

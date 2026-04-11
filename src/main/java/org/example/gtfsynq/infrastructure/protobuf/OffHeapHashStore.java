@@ -1,4 +1,4 @@
-package org.example.sirianalyzer.proto;
+package org.example.gtfsynq.infrastructure.protobuf;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;

@@ -1,4 +1,4 @@
-package org.example.sirianalyzer.proto;
+package org.example.gtfsynq.infrastructure.protobuf;
 
 import com.google.protobuf.CodedInputStream;
 import java.io.BufferedInputStream;
@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.hashing.LongHashFunction;
 import org.apache.kafka.shaded.com.google.protobuf.WireFormat;
-import org.example.sirianalyzer.util.SizeFormat;
+import org.example.gtfsynq.util.SizeFormat;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

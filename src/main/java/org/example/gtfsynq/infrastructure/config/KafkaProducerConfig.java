@@ -1,4 +1,4 @@
-package org.example.sirianalyzer.config;
+package org.example.gtfsynq.infrastructure.config;
 
 import java.util.HashMap;
 import java.util.Map;

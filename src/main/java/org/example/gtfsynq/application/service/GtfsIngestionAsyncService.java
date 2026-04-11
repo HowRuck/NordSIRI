@@ -1,4 +1,4 @@
-package org.example.sirianalyzer.services;
+package org.example.gtfsynq.application.service;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;

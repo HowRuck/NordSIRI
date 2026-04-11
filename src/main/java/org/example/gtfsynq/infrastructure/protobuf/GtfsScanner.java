@@ -1,4 +1,4 @@
-package org.example.sirianalyzer.proto;
+package org.example.gtfsynq.infrastructure.protobuf;
 
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.WireFormat;

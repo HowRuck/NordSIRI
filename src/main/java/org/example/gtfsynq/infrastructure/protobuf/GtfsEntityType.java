@@ -1,4 +1,4 @@
-package org.example.sirianalyzer.proto;
+package org.example.gtfsynq.infrastructure.protobuf;
 
 public enum GtfsEntityType {
     TRIP_UPDATE,

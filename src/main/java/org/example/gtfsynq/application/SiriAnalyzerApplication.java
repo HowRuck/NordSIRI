@@ -1,4 +1,4 @@
-package org.example.sirianalyzer;
+package org.example.gtfsynq.application;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
