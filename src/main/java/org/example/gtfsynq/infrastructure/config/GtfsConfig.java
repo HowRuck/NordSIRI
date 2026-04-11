@@ -3,7 +3,9 @@ package org.example.gtfsynq.infrastructure.config;
 import java.util.List;
 import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
+@Component
 @ConfigurationProperties(prefix = "gtfs")
 public class GtfsConfig {
 
