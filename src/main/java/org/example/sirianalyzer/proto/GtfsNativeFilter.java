@@ -27,7 +27,10 @@ public class GtfsNativeFilter {
     private final LongHashFunction hashFunction = LongHashFunction.xx3();
     private int lastUpdateCount = 10_000;
 
-    public record TypedEntity(byte[] bytes, long hash) {}
+    /**
+     * A typed entity with the entity's bytes and type
+     */
+    public record TypedEntity(byte[] bytes, long type) {}
 
     @Value("${gtfs.readBufferSize:8}")
     private int readBufferSizeMb;
@@ -62,7 +65,7 @@ public class GtfsNativeFilter {
     }
 
     /**
-     * Process a single feed entity and return a TypedEntity with the entity's bytes and hash
+     * Process a single feed entity and return a TypedEntity with the entity's bytes and type
      *
      * @param entityBytes The entity's bytes
      * @param feedIdChars The feed ID as a char array
@@ -86,7 +89,7 @@ public class GtfsNativeFilter {
 
         if (existingHash == OffHeapHashStore.EMPTY_VALUE) {
             stateStore.put(hashedId, hashedBytes);
-            return new TypedEntity(entityBytes, hashedBytes);
+            return new TypedEntity(entityBytes, scanResult.type());
         }
 
         if (hashedBytes == existingHash) {
@@ -95,7 +98,7 @@ public class GtfsNativeFilter {
 
         stateStore.put(hashedId, hashedBytes);
 
-        return new TypedEntity(entityBytes, hashedBytes);
+        return new TypedEntity(entityBytes, scanResult.type());
     }
 
     /**
