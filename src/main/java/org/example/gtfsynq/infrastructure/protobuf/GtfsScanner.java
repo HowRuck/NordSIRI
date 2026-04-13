@@ -178,15 +178,12 @@ public class GtfsScanner {
             var keyHash = FeedHashing.hashBytes(fieldKey);
             var storedValue = hashStore.get(keyHash);
 
-            if (storedValue != OffHeapLongTable.EMPTY_VALUE) {
-                if (storedValue != bytesHash) {
-                    changedFields[changedCount++] = fieldNumber;
-                    changedCount++;
-                }
-            } else {
-                changedFields[changedCount++] = fieldNumber;
-                changedCount++;
+            if (storedValue == bytesHash) {
+                continue;
             }
+
+            changedFields[changedCount++] = fieldNumber;
+            hashStore.put(keyHash, bytesHash);
         }
 
         return Arrays.copyOf(changedFields, changedCount);
