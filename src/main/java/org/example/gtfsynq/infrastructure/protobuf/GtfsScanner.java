@@ -3,7 +3,12 @@ package org.example.gtfsynq.infrastructure.protobuf;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.WireFormat;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
+import org.example.gtfsynq.infrastructure.protobuf.offheap.OffHeapHashStore;
+import org.example.gtfsynq.infrastructure.protobuf.offheap.OffHeapLongTable;
+import org.example.gtfsynq.util.FeedHashing;
 
 /**
  * Scans GTFS-RT entities and extracts the stable ID and entity type
@@ -152,5 +157,38 @@ public class GtfsScanner {
         return tripId == null
             ? null
             : (tripId + ":" + (startDate == null ? "" : startDate));
+    }
+
+    public static int[] scanChangedFields(
+        String entityId,
+        CodedInputStream cis,
+        OffHeapHashStore hashStore
+    ) throws IOException {
+        var changedFields = new int[64];
+        var changedCount = 0;
+
+        while (!cis.isAtEnd()) {
+            var tag = cis.readTag();
+            var fieldNumber = WireFormat.getTagFieldNumber(tag);
+
+            var bytes = cis.readByteArray();
+            var bytesHash = FeedHashing.hashBytes(bytes);
+
+            var fieldKey = (entityId + ":" + fieldNumber).getBytes();
+            var keyHash = FeedHashing.hashBytes(fieldKey);
+            var storedValue = hashStore.get(keyHash);
+
+            if (storedValue != OffHeapLongTable.EMPTY_VALUE) {
+                if (storedValue != bytesHash) {
+                    changedFields[changedCount++] = fieldNumber;
+                    changedCount++;
+                }
+            } else {
+                changedFields[changedCount++] = fieldNumber;
+                changedCount++;
+            }
+        }
+
+        return Arrays.copyOf(changedFields, changedCount);
     }
 }

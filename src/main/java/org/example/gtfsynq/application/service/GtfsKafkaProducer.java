@@ -43,8 +43,13 @@ public class GtfsKafkaProducer {
         var startTime = System.currentTimeMillis();
         log.info("Sending {} trip updates to Kafka", entities.size());
 
-        for (GtfsNativeFilter.TypedEntity entity : entities) {
-            kafka.send(topic, feedId, entity.bytes());
+        var encodedEntities = entities
+            .parallelStream()
+            .map(GtfsNativeFilter.TypedEntity::encode)
+            .toList();
+
+        for (var entity : encodedEntities) {
+            kafka.send(topic, feedId, entity);
         }
 
         var endTime = System.currentTimeMillis();

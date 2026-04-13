@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.example.gtfsynq.infrastructure.protobuf.GtfsNativeFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -24,7 +25,9 @@ public class GtfsKafkaConsumer {
 
     public FeedEntity parseFeedEntity(byte[] value) {
         try {
-            return FeedEntity.parseFrom(value);
+            var typedEntity = GtfsNativeFilter.TypedEntity.decode(value);
+
+            return FeedEntity.parseFrom(typedEntity.bytes());
         } catch (InvalidProtocolBufferException e) {
             log.error("Failed to parse FeedEntity", e);
             return null;
@@ -44,9 +47,6 @@ public class GtfsKafkaConsumer {
 
         messageStream
             .mapValues(this::parseFeedEntity)
-            .filter((key, value) -> value != null)
-            .foreach((key, value) ->
-                log.info("Successfully processed entity: {}", value.getId())
-            );
+            .filter((key, value) -> value != null);
     }
 }
