@@ -48,7 +48,6 @@ public class KafkaProducerConfig {
         );
 
         // Performance optimizations for batching and compression
-        configProps.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "lz4");
         configProps.put(ProducerConfig.LINGER_MS_CONFIG, 20);
         configProps.put(ProducerConfig.BATCH_SIZE_CONFIG, 32768);
         configProps.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, 120000);
