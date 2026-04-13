@@ -1,10 +1,12 @@
 package org.example.gtfsynq.infrastructure.protobuf.offheap;
 
 import java.util.concurrent.locks.StampedLock;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class OffHeapHashStore implements AutoCloseable {
 
     private OffHeapLongTable binTable = new OffHeapLongTable();
@@ -133,5 +135,36 @@ public class OffHeapHashStore implements AutoCloseable {
     public void tickMinute() {
         var currentMinute = (int) (System.currentTimeMillis() / 60000);
         this.currentMinute = currentMinute;
+    }
+
+    @Scheduled(fixedRate = 10000)
+    public void printLoadPercentage() {
+        var stamp = lock.readLock();
+        var occupied = 0;
+
+        try {
+            for (var i = 0; i < OffHeapLongTable.CAPACITY; i++) {
+                var key = binTable.getKey(i);
+                if (
+                    key != OffHeapLongTable.EMPTY_VALUE &&
+                    binTable.getExpiry(i) > currentMinute
+                ) {
+                    occupied++;
+                }
+            }
+        } finally {
+            lock.unlockRead(stamp);
+        }
+
+        var loadPercentage =
+            ((double) occupied / OffHeapLongTable.CAPACITY) * 100;
+        log.info(
+            String.format(
+                "[OffHeapHashStore] Load: %.2f%% (%d/%d)",
+                loadPercentage,
+                occupied,
+                OffHeapLongTable.CAPACITY
+            )
+        );
     }
 }
