@@ -1,6 +1,5 @@
 package org.example.gtfsynq.util;
 
-import com.google.protobuf.ByteString;
 import lombok.NoArgsConstructor;
 import net.openhft.hashing.LongHashFunction;
 
@@ -18,9 +17,7 @@ public final class FeedHashing {
      * @param rawBytes Raw bytes of the GTFS entity
      * @return Hash of the raw bytes
      */
-    public static long hashBytes(ByteString rawBytes) {
-        var roBuffer = rawBytes.toByteArray();
-
-        return STATE_HASHER.hashBytes(roBuffer);
+    public static long hashBytes(byte[] rawBytes) {
+        return STATE_HASHER.hashBytes(rawBytes);
     }
 }

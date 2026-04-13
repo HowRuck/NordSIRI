@@ -12,118 +12,92 @@ import java.lang.invoke.VarHandle;
  * <p>This class centralizes the low-level foreign-memory setup so the hash store can focus on
  * behavior rather than repeated layout and access boilerplate.
  */
-public final class OffHeapLongTable {
+public final class OffHeapLongTable implements AutoCloseable {
 
-    private static final long SLOT_SIZE_BYTES = Long.BYTES * 3L;
+    public static final int CAPACITY = 262144;
+    public static final int CAPACITY_MASK = CAPACITY - 1;
+    public static final int SLOT_SIZE = 32; // 8 (key) + 8 (val) + 4 (expiry) + 4 (psl) = 24, but aligned to 32
 
+    public static final long EMPTY_VALUE = 0L;
+
+    private final Arena arena;
     private final MemorySegment segment;
+
+    // VarHandles for each field
     private final VarHandle keyHandle;
     private final VarHandle valueHandle;
-    private final VarHandle expiresAtHandle;
+    private final VarHandle expiryHandle;
+    private final VarHandle pslHandle;
 
-    public OffHeapLongTable(Arena arena, long slotCount) {
+    public OffHeapLongTable() {
+        arena = Arena.ofShared();
+        segment = this.arena.allocate(CAPACITY * SLOT_SIZE, 64);
+
+        // Define the slot layout
         var slotLayout = MemoryLayout.structLayout(
             ValueLayout.JAVA_LONG.withName("key"),
             ValueLayout.JAVA_LONG.withName("value"),
-            ValueLayout.JAVA_LONG.withName("expiresAt")
+            ValueLayout.JAVA_INT.withName("expiry"),
+            ValueLayout.JAVA_INT.withName("psl")
         );
 
-        var tableLayout = MemoryLayout.sequenceLayout(slotCount, slotLayout);
+        // Create a sequence layout for all slots
+        var tableLayout = MemoryLayout.sequenceLayout(CAPACITY, slotLayout);
 
-        segment = arena.allocate(slotCount * SLOT_SIZE_BYTES);
-
+        // Create VarHandles for each field
         keyHandle = tableLayout.varHandle(
             MemoryLayout.PathElement.sequenceElement(),
             MemoryLayout.PathElement.groupElement("key")
         );
-
         valueHandle = tableLayout.varHandle(
             MemoryLayout.PathElement.sequenceElement(),
             MemoryLayout.PathElement.groupElement("value")
         );
-
-        expiresAtHandle = tableLayout.varHandle(
+        expiryHandle = tableLayout.varHandle(
             MemoryLayout.PathElement.sequenceElement(),
-            MemoryLayout.PathElement.groupElement("expiresAt")
+            MemoryLayout.PathElement.groupElement("expiry")
+        );
+        pslHandle = tableLayout.varHandle(
+            MemoryLayout.PathElement.sequenceElement(),
+            MemoryLayout.PathElement.groupElement("psl")
         );
     }
 
-    /**
-     * Returns the underlying memory segment for this table
-     */
-    public MemorySegment segment() {
-        return segment;
-    }
-
-    /**
-     * Returns the key at the given index
-     */
+    // Helper methods for readability
     public long getKey(long index) {
-        return getLong(keyHandle, index);
+        return (long) keyHandle.get(segment, 0L, index);
     }
 
-    /**
-     * Returns the value at the given index
-     */
     public long getValue(long index) {
-        return getLong(valueHandle, index);
+        return (long) valueHandle.get(segment, 0L, index);
     }
 
-    /**
-     * Returns the expiration time at the given index
-     */
-    public long getExpiresAt(long index) {
-        return getLong(expiresAtHandle, index);
+    public int getExpiry(long index) {
+        return (int) expiryHandle.get(segment, 0L, index);
     }
 
-    /**
-     * Sets the key at the given index
-     */
-    public void setKey(long index, long value) {
-        setLong(keyHandle, index, value);
+    public int getPsl(long index) {
+        return (int) pslHandle.get(segment, 0L, index);
     }
 
-    /**
-     * Sets the value at the given index
-     */
+    public void setKey(long index, long key) {
+        keyHandle.set(segment, 0L, index, key);
+    }
+
     public void setValue(long index, long value) {
-        setLong(valueHandle, index, value);
+        valueHandle.set(segment, 0L, index, value);
     }
 
-    /**
-     * Sets the expiration time at the given index
-     */
-    public void setExpiresAt(long index, long value) {
-        setLong(expiresAtHandle, index, value);
+    public void setExpiry(long index, int expiry) {
+        expiryHandle.set(segment, 0L, index, expiry);
     }
 
-    /**
-     * Clears the slot at the given index, setting all fields to 0
-     */
-    public void clearSlot(long index) {
-        setKey(index, 0L);
-        setValue(index, 0L);
-        setExpiresAt(index, 0L);
+    public void setPsl(long index, int psl) {
+        pslHandle.set(segment, 0L, index, psl);
     }
 
-    /**
-     * Clears all slots in the table, setting all fields to 0
-     */
-    public void clear() {
-        segment.fill((byte) 0);
-    }
-
-    /**
-     * Helper method to get a long value from the segment using a VarHandle
-     */
-    private long getLong(VarHandle handle, long index) {
-        return (long) handle.get(segment, 0L, index);
-    }
-
-    /**
-     * Helper method to set a long value in the segment using a VarHandle
-     */
-    private void setLong(VarHandle handle, long index, long value) {
-        handle.set(segment, 0L, index, value);
+    @Override
+    public void close() {
+        arena.close();
     }
 }

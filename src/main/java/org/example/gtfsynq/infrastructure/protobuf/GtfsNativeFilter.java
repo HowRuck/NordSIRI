@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.hashing.LongHashFunction;
 import org.apache.kafka.shaded.com.google.protobuf.WireFormat;
+import org.example.gtfsynq.infrastructure.protobuf.offheap.OffHeapHashStore;
+import org.example.gtfsynq.infrastructure.protobuf.offheap.OffHeapLongTable;
 import org.example.gtfsynq.util.SizeFormat;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -87,7 +89,7 @@ public class GtfsNativeFilter {
 
         var existingHash = stateStore.get(hashedId);
 
-        if (existingHash == OffHeapHashStore.EMPTY_VALUE) {
+        if (existingHash == OffHeapLongTable.EMPTY_VALUE) {
             stateStore.put(hashedId, hashedBytes);
             return new TypedEntity(entityBytes, scanResult.type());
         }
