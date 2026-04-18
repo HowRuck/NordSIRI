@@ -1,10 +1,8 @@
 package org.example.gtfsynq.infrastructure.protobuf.offheap;
 
 import java.lang.foreign.Arena;
-import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.lang.invoke.VarHandle;
 
 /**
  * Shared off-heap memory helper for a packed {@code long -> long -> long} table row layout.
@@ -14,86 +12,133 @@ import java.lang.invoke.VarHandle;
  */
 public final class OffHeapLongTable implements AutoCloseable {
 
-    public static final int CAPACITY = 262144;
+    public static final int CAPACITY = 8_388_608;
     public static final int CAPACITY_MASK = CAPACITY - 1;
-    public static final int SLOT_SIZE = 32; // 8 (key) + 8 (val) + 4 (expiry) + 4 (psl) = 24, but aligned to 32
+
+    /**
+     * Row size in bytes.
+     *
+     * <p>Layout:
+     * <ul>
+     *   <li>key: 8 bytes</li>
+     *   <li>value: 8 bytes</li>
+     *   <li>expiry: 4 bytes</li>
+     *   <li>psl: 4 bytes</li>
+     *   <li>customSlot1: 4 bytes</li>
+     *   <li>customSlot2: 4 bytes</li>
+     * </ul>
+     *
+     * <p>Total: 32 bytes.
+     */
+    public static final int SLOT_SIZE = 32;
+
+    private static final int KEY_OFFSET = 0;
+    private static final int VALUE_OFFSET = KEY_OFFSET + Long.BYTES;
+    private static final int EXPIRY_OFFSET = VALUE_OFFSET + Long.BYTES;
+    private static final int PSL_OFFSET = EXPIRY_OFFSET + Integer.BYTES;
+    private static final int CUSTOM_SLOT1_OFFSET = PSL_OFFSET + Integer.BYTES;
+    private static final int CUSTOM_SLOT2_OFFSET =
+        CUSTOM_SLOT1_OFFSET + Integer.BYTES;
 
     public static final long EMPTY_VALUE = 0L;
+    public static final long[] EMPTY_VALUE_ARRAY = new long[] {
+        EMPTY_VALUE,
+        EMPTY_VALUE,
+        EMPTY_VALUE,
+    };
 
     private final Arena arena;
     private final MemorySegment segment;
 
-    // VarHandles for each field
-    private final VarHandle keyHandle;
-    private final VarHandle valueHandle;
-    private final VarHandle expiryHandle;
-    private final VarHandle pslHandle;
-
     public OffHeapLongTable() {
         arena = Arena.ofShared();
-        segment = this.arena.allocate(CAPACITY * SLOT_SIZE, 64);
-
-        // Define the slot layout
-        var slotLayout = MemoryLayout.structLayout(
-            ValueLayout.JAVA_LONG.withName("key"),
-            ValueLayout.JAVA_LONG.withName("value"),
-            ValueLayout.JAVA_INT.withName("expiry"),
-            ValueLayout.JAVA_INT.withName("psl")
-        );
-
-        // Create a sequence layout for all slots
-        var tableLayout = MemoryLayout.sequenceLayout(CAPACITY, slotLayout);
-
-        // Create VarHandles for each field
-        keyHandle = tableLayout.varHandle(
-            MemoryLayout.PathElement.sequenceElement(),
-            MemoryLayout.PathElement.groupElement("key")
-        );
-        valueHandle = tableLayout.varHandle(
-            MemoryLayout.PathElement.sequenceElement(),
-            MemoryLayout.PathElement.groupElement("value")
-        );
-        expiryHandle = tableLayout.varHandle(
-            MemoryLayout.PathElement.sequenceElement(),
-            MemoryLayout.PathElement.groupElement("expiry")
-        );
-        pslHandle = tableLayout.varHandle(
-            MemoryLayout.PathElement.sequenceElement(),
-            MemoryLayout.PathElement.groupElement("psl")
-        );
+        segment = this.arena.allocate((long) CAPACITY * SLOT_SIZE, 64);
     }
 
-    // Helper methods for readability
     public long getKey(long index) {
-        return (long) keyHandle.get(segment, 0L, index);
+        return segment.get(
+            ValueLayout.JAVA_LONG,
+            slotOffset(index) + KEY_OFFSET
+        );
     }
 
     public long getValue(long index) {
-        return (long) valueHandle.get(segment, 0L, index);
+        return segment.get(
+            ValueLayout.JAVA_LONG,
+            slotOffset(index) + VALUE_OFFSET
+        );
     }
 
     public int getExpiry(long index) {
-        return (int) expiryHandle.get(segment, 0L, index);
+        return segment.get(
+            ValueLayout.JAVA_INT,
+            slotOffset(index) + EXPIRY_OFFSET
+        );
     }
 
     public int getPsl(long index) {
-        return (int) pslHandle.get(segment, 0L, index);
+        return segment.get(
+            ValueLayout.JAVA_INT,
+            slotOffset(index) + PSL_OFFSET
+        );
+    }
+
+    public int getCustomSlot1(long index) {
+        return segment.get(
+            ValueLayout.JAVA_INT,
+            slotOffset(index) + CUSTOM_SLOT1_OFFSET
+        );
+    }
+
+    public int getCustomSlot2(long index) {
+        return segment.get(
+            ValueLayout.JAVA_INT,
+            slotOffset(index) + CUSTOM_SLOT2_OFFSET
+        );
     }
 
     public void setKey(long index, long key) {
-        keyHandle.set(segment, 0L, index, key);
+        segment.set(ValueLayout.JAVA_LONG, slotOffset(index) + KEY_OFFSET, key);
     }
 
     public void setValue(long index, long value) {
-        valueHandle.set(segment, 0L, index, value);
+        segment.set(
+            ValueLayout.JAVA_LONG,
+            slotOffset(index) + VALUE_OFFSET,
+            value
+        );
     }
 
     public void setExpiry(long index, int expiry) {
-        expiryHandle.set(segment, 0L, index, expiry);
+        segment.set(
+            ValueLayout.JAVA_INT,
+            slotOffset(index) + EXPIRY_OFFSET,
+            expiry
+        );
     }
 
     public void setPsl(long index, int psl) {
-        pslHandle.set(segment, 0L, index, psl);
+        segment.set(ValueLayout.JAVA_INT, slotOffset(index) + PSL_OFFSET, psl);
+    }
+
+    public void setCustomSlot1(long index, int customSlot1) {
+        segment.set(
+            ValueLayout.JAVA_INT,
+            slotOffset(index) + CUSTOM_SLOT1_OFFSET,
+            customSlot1
+        );
+    }
+
+    public void setCustomSlot2(long index, int customSlot2) {
+        segment.set(
+            ValueLayout.JAVA_INT,
+            slotOffset(index) + CUSTOM_SLOT2_OFFSET,
+            customSlot2
+        );
+    }
+
+    private long slotOffset(long index) {
+        return index * SLOT_SIZE;
     }
 
     @Override
