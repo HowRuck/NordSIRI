@@ -52,7 +52,7 @@ public class OffHeapHashStore implements AutoCloseable {
     }
 
     public long[] getWithLock(long key, long stamp) {
-        var index = key & OffHeapLongTable.CAPACITY_MASK;
+        var index = hash(key) & OffHeapLongTable.CAPACITY_MASK;
 
         for (var i = 0; i < OffHeapLongTable.CAPACITY; i++) {
             var slotKey = binTable.getKey(index);
@@ -127,7 +127,7 @@ public class OffHeapHashStore implements AutoCloseable {
         int customSlot1,
         int customSlot2
     ) {
-        var index = key & OffHeapLongTable.CAPACITY_MASK;
+        var index = hash(key) & OffHeapLongTable.CAPACITY_MASK;
         long firstAvailableIndex = -1;
 
         for (var i = 0; i < OffHeapLongTable.CAPACITY; i++) {
@@ -201,6 +201,12 @@ public class OffHeapHashStore implements AutoCloseable {
         binTable.setPsl(index, 0);
         binTable.setCustomSlot1(index, c1);
         binTable.setCustomSlot2(index, c2);
+    }
+
+    private static long hash(long key) {
+        key = (key ^ (key >>> 30)) * 0xbf58476d1ce4e5b9L;
+        key = (key ^ (key >>> 27)) * 0x94d049bb133111ebL;
+        return key ^ (key >>> 31);
     }
 
     @Override
