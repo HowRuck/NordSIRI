@@ -5,10 +5,23 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a trip update, including the trip descriptor and stop time updates
+ */
 public record TripUpdateDto(
+    /** The trip descriptor */
     TripDescriptorDto tripDescriptor,
+    /** The stop time updates */
     List<TripStopTimeUpdateDto> stopTimeUpdates
 ) {
+    /**
+     * Converts a FeedEntity to a TripUpdateDto
+     *
+     * @param entity the feed entity
+     * @param feedId the feed id
+     * @param observedAt the observed at timestamp
+     * @return the trip update dto, or null if the entity does not have a trip update
+     */
     public static TripUpdateDto fromEntity(
         FeedEntity entity,
         String feedId,
@@ -18,6 +31,7 @@ public record TripUpdateDto(
 
         var update = entity.getTripUpdate();
 
+        // Convert trip descriptor
         var tripDescriptor = TripDescriptorDto.fromEntity(
             update.getTrip(),
             feedId,
@@ -25,10 +39,11 @@ public record TripUpdateDto(
             observedAt
         );
 
+        // Individually convert Stop Time Updates
         var stopTimeUpdates = new ArrayList<TripStopTimeUpdateDto>(
             update.getStopTimeUpdateCount()
         );
-        for (int index = 0; index < update.getStopTimeUpdateCount(); index++) {
+        for (var index = 0; index < update.getStopTimeUpdateCount(); index++) {
             var stu = update.getStopTimeUpdate(index);
 
             stopTimeUpdates.add(

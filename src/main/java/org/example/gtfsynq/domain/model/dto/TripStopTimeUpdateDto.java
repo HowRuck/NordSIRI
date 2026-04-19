@@ -8,22 +8,42 @@ import org.example.gtfsynq.util.FeedHashing;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+/**
+ * DTO for a GTFS trip stop time update, including its hash for deduplication
+ */
 public record TripStopTimeUpdateDto(
+    /** The trip key of this stop time update */
     @NonNull long tripKey,
+    /** The feed ID of this stop time update */
     @NonNull String feedId,
+    /** The timestamp when this stop time update was received */
     @NonNull Instant receivedAt,
+    /** The stop sequence of this stop time update */
     @NonNull Integer stopSequence,
+    /** The stop ID of this stop time update */
     @NonNull String stopId,
+    /** The arrival time of this stop time update */
     @Nullable Instant arrivalTime,
+    /** The arrival delay of this stop time update */
     @Nullable Integer arrivalDelay,
+    /** The scheduled arrival time of this stop time update */
     @Nullable Instant scheduledArrivalTime,
+    /** The departure time of this stop time update */
     @Nullable Instant departureTime,
+    /** The departure delay of this stop time update */
     @Nullable Integer departureDelay,
+    /** The scheduled departure time of this stop time update */
     @Nullable Instant scheduledDepartureTime,
+    /** The schedule relationship of this stop time update */
     @Nullable ScheduleRelationship scheduleRelationship,
+    /** The assigned stop ID of this stop time update */
     @Nullable String assignedStopId,
+    /** The hash of this stop time update for deduplication */
     long hash
 ) {
+    /**
+     * Creates a TripStopTimeUpdateDto from a StopTimeUpdate protobuf message
+     */
     public static TripStopTimeUpdateDto fromProto(
         long tripId,
         String feedId,
@@ -90,7 +110,16 @@ public record TripStopTimeUpdateDto(
             stu.getStopId()
         );
 
-        var hash = hashPersistedFields(
+        /**
+         * Creates a hash of metadata fields.
+         *
+         * Delays (and their associated arrival/departure times) are explicitly excluded
+         * from this hash to ensure stability during deduplication, as these values are
+         * compared separately against their previous values.
+         *
+         * This hashes everything in the object EXEPT the delays and directly associated values in order to keep hash stable
+         */
+        var hash = hashMetaFields(
             feedId,
             stopSequence,
             stopId,
@@ -118,7 +147,19 @@ public record TripStopTimeUpdateDto(
         );
     }
 
-    private static long hashPersistedFields(
+    /**
+     * Hashes the meta fields of a TripStopTimeUpdateDto
+     *
+     * @param feedId The feed ID
+     * @param stopSequence The stop sequence
+     * @param stopId The stop ID
+     * @param scheduledArrivalTime The scheduled arrival time
+     * @param scheduledDepartureTime The scheduled departure time
+     * @param scheduleRelationship The schedule relationship
+     * @param assignedStopId The assigned stop ID
+     * @return The hash
+     */
+    private static long hashMetaFields(
         String feedId,
         Integer stopSequence,
         String stopId,

@@ -7,21 +7,34 @@ import java.time.LocalTime;
 import org.example.gtfsynq.domain.util.GtfsFeedFormatter;
 import org.example.gtfsynq.util.FeedHashing;
 
+/**
+ * DTO for a GTFS trip descriptor, including its hash for deduplication
+ */
 public record TripDescriptorDto(
+    /** The stable ID of this trip descriptor */
     long id,
+    /** The entity ID of this trip descriptor */
     String entityId,
+    /** The feed ID of this trip descriptor */
     String feedId,
+    /** The timestamp when this trip descriptor was observed */
     Instant observedAt,
+    /** The trip ID of this trip descriptor */
     String tripId,
+    /** The route ID of this trip descriptor */
     String routeId,
+    /** The direction ID of this trip descriptor */
     Integer directionId,
+    /** The start date of this trip descriptor */
     LocalDate startDate,
+    /** The start time of this trip descriptor */
     LocalTime startTime,
+    /** The hash of this trip descriptor for deduplication */
     long hash
-    //ScheduleRelationship scheduleRelationship,
-    //Integer stopTimeUpdateCount,
-    //boolean isDeleted
 ) {
+    /**
+     * Creates a TripDescriptorDto from a TripDescriptor entity
+     */
     public static TripDescriptorDto fromEntity(
         TripDescriptor tripDescriptor,
         String feedId,
