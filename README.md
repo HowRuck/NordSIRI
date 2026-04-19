@@ -1,14 +1,16 @@
-# GTFSynq 
+<div align="center">
+   <h1>GTFSynq</h1> 
 
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.5-6DB33F?logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Java](https://img.shields.io/badge/Java-25-oracle?logo=java&logoColor=white)](https://www.java.com)
-[![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL-468B97?logo=timescale&logoColor=white)](https://www.timescale.com)
-[![Kafka](https://img.shields.io/badge/Apache_Kafka-4.2.0-231F20?logo=apache-kafka&logoColor=white)](https://kafka.apache.org)
-[![Zed](https://img.shields.io/badge/Built_with_Zed-0D0D0D?logo=zed&logoColor=white)](https://zed.dev)
+   A modern, high-performance application for processing, storing and analyzing *GTFS-RT (General Transit Feed Specification - Real-Time)* data
 
-**GTFSynq** is a modern, high-performance application for processing and analyzing **GTFS-RT (General Transit Feed Specification - Real-Time)** data. Built for real-time transit data ingestion, processing, and analytics, this project leverages cutting-edge technologies to deliver scalable and efficient transit data handling.
+   [![Spring Boot](https://img.shields.io/badge/Spring_Boot-4-6DB33F?logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
+   [![Java](https://img.shields.io/badge/Java-25-oracle?logo=java&logoColor=white)](https://www.java.com)
+   [![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL-468B97?logo=timescale&logoColor=white)](https://www.timescale.com)
+   [![Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?logo=apache-kafka&logoColor=white)](https://kafka.apache.org)
+   [![Zed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/zed-industries/zed/main/assets/badge/v0.json)](https://zed.dev)
 
----
+</div>
+
 
 ## ✨ **Features**
 
@@ -19,9 +21,14 @@
 - **Metrics & Monitoring**: Built-in Actuator endpoints with Prometheus support.
 - **Native Compilation**: GraalVM native image support for fast startup and low memory footprint.
 
----
 
 ## 🛠️ **Getting Started**
+
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-4-6DB33F?logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-25-oracle?logo=java&logoColor=white)](https://www.java.com)
+[![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL-468B97?logo=timescale&logoColor=white)](https://www.timescale.com)
+[![Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?logo=apache-kafka&logoColor=white)](https://kafka.apache.org)
+[![Zed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/zed-industries/zed/main/assets/badge/v0.json)](https://zed.dev)
 
 ### Prerequisites
 - Java 25+.
@@ -51,7 +58,6 @@
    - Actuator: `http://localhost:8080/actuator`
    - Prometheus Metrics: `http://localhost:8080/actuator/prometheus`
 
----
 ## 📦 **Project Structure**
 
 ```
@@ -67,7 +73,6 @@ GTFSynq/
 └── run.sh                # Convenience startup script
 ```
 
----
 ## 🎯 **Use Cases**
 
 - Real-time transit data visualization.
@@ -76,12 +81,9 @@ GTFSynq/
 - GTFS-RT feed validation and monitoring.
 - Transit agency integration.
 
----
 ## 📝 **Note**
 
 > **🎓 Educational Project**: GTFSynq is primarily intended for educational purposes and skill development. It serves as a platform to explore modern Java development, Spring Boot 4, time-series databases, and real-time data processing. While functional, the code may not follow all production-grade architectural patterns or performance optimizations.
-
----
 
 ## 🚀 **Tech Stack**
 
@@ -93,11 +95,3 @@ GTFSynq/
 | **Streaming** | [Apache Kafka 4](https://kafka.apache.org) | Distributed event streaming platform |
 | **Protocol Buffers** | Protobuf 4 | Efficient data serialization |
 | **Language** | Java 25 | Latest LTS with cutting-edge features |
-
-</br>
-
-<div align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Spring_Boot.svg/1280px-Spring_Boot.svg.png" alt="Spring Boot" height="60" />
-  <img src="https://assets.tigerdata.com/timescale-web/brand/tiger-data/flat-logos/logo-badge-black.svg" alt="TimescaleDB" height="60" />
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Zed_Editor_Logo.png/500px-Zed_Editor_Logo.png" alt="Zed" height="60" />
-</div>
