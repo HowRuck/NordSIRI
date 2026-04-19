@@ -31,7 +31,9 @@ public class TripUpdateRepository {
     private final JdbcTemplate jdbcTemplate;
 
     /**
-     * Upserts the parent trip update row.
+     * Upserts the parent trip update row
+     *
+     * @param descriptors the list of trip descriptors to upsert
      */
     public void upsertTripDescriptors(List<TripDescriptorDto> descriptors) {
         if (descriptors == null || descriptors.isEmpty()) {
@@ -92,6 +94,11 @@ public class TripUpdateRepository {
         );
     }
 
+    /**
+     * Appends a list of trip stop time updates to the database.
+     *
+     * @param updates the list of trip stop time updates to append
+     */
     public void appendTripUpdates(List<TripStopTimeUpdateDto> updates) {
         if (updates == null || updates.isEmpty()) {
             return;
@@ -172,6 +179,14 @@ public class TripUpdateRepository {
         );
     }
 
+    /**
+     * Utility method to set a nullable integer value in a prepared statement
+     *
+     * @param ps the prepared statement
+     * @param index the parameter index
+     * @param value the integer value to set, or null for a null value
+     * @throws SQLException if a database access error occurs
+     */
     private void setNullableInteger(
         PreparedStatement ps,
         int index,
