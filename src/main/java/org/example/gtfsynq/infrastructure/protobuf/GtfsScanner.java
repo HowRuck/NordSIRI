@@ -3,15 +3,10 @@ package org.example.gtfsynq.infrastructure.protobuf;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.WireFormat;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
-import org.example.gtfsynq.infrastructure.protobuf.offheap.OffHeapHashStore;
-import org.example.gtfsynq.infrastructure.protobuf.offheap.OffHeapLongTable;
-import org.example.gtfsynq.util.FeedHashing;
 
 /**
- * Scans GTFS-RT entities and extracts the stable ID and entity type
+ * Scans GTFS-RT entities and extracts the stable ID and entity type.
  */
 @Slf4j
 public class GtfsScanner {
@@ -28,12 +23,12 @@ public class GtfsScanner {
     private static final int FIELD_START_DATE = 3;
 
     /**
-     * Represents the result of scanning a GTFS-RT entity, including the stable ID and entity type
+     * Represents the result of scanning a GTFS-RT entity, including the stable ID and entity type.
      */
     public record ScanResult(String id, int type) {}
 
     /**
-     * Scans a GTFS-RT entity and returns the result, including the stable ID and entity type
+     * Scans a GTFS-RT entity and returns the result, including the stable ID and entity type.
      *
      * @param cis the CodedInputStream to read from
      * @return the scan result, including the stable ID and entity type
@@ -70,7 +65,7 @@ public class GtfsScanner {
     }
 
     /**
-     * Finds the stable ID of a GTFS-RT entity by reading the nested trip descriptor
+     * Finds the stable ID of a GTFS-RT entity by reading the nested trip descriptor.
      *
      * @param cis the CodedInputStream to read from
      * @return the stable ID of the entity, or null if not found
@@ -95,7 +90,7 @@ public class GtfsScanner {
     }
 
     /**
-     * Parses the nested trip descriptor and returns the stable ID
+     * Parses the nested trip descriptor and returns the stable ID.
      *
      * @param cis the CodedInputStream to read from
      * @return the stable ID of the trip, or null if not found
@@ -157,35 +152,5 @@ public class GtfsScanner {
         return tripId == null
             ? null
             : (tripId + ":" + (startDate == null ? "" : startDate));
-    }
-
-    public static int[] scanChangedFields(
-        String entityId,
-        CodedInputStream cis,
-        OffHeapHashStore hashStore
-    ) throws IOException {
-        var changedFields = new int[64];
-        var changedCount = 0;
-
-        while (!cis.isAtEnd()) {
-            var tag = cis.readTag();
-            var fieldNumber = WireFormat.getTagFieldNumber(tag);
-
-            var bytes = cis.readByteArray();
-            var bytesHash = FeedHashing.hashBytes(bytes);
-
-            var fieldKey = (entityId + ":" + fieldNumber).getBytes();
-            var keyHash = FeedHashing.hashBytes(fieldKey);
-            var storedValue = hashStore.get(keyHash);
-
-            if (storedValue == bytesHash) {
-                continue;
-            }
-
-            changedFields[changedCount++] = fieldNumber;
-            hashStore.put(keyHash, bytesHash);
-        }
-
-        return Arrays.copyOf(changedFields, changedCount);
     }
 }

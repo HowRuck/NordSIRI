@@ -169,18 +169,12 @@ public class GtfsNativeFilter {
         }
 
         stateStore.put(hashedId, hashedBytes);
-        entityCis = CodedInputStream.newInstance(entityBytes);
-        var changedFields = GtfsScanner.scanChangedFields(
-            entityId,
-            entityCis,
-            stateStore
-        );
 
         return new TypedEntity(
             entityBytes,
             scanResult.type(),
             false,
-            changedFields
+            new int[0]
         );
     }
 

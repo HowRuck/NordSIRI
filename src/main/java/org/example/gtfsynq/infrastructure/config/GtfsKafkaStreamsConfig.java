@@ -10,6 +10,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration;
 import org.springframework.kafka.config.KafkaStreamsConfiguration;
 
+/**
+ * Configuration class for setting up Kafka Streams for GTFS data processing.
+ */
 @Configuration
 public class GtfsKafkaStreamsConfig {
 
