@@ -24,12 +24,6 @@
 
 ## 🛠️ **Getting Started**
 
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-4-6DB33F?logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Java](https://img.shields.io/badge/Java-25-oracle?logo=java&logoColor=white)](https://www.java.com)
-[![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL-468B97?logo=timescale&logoColor=white)](https://www.timescale.com)
-[![Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?logo=apache-kafka&logoColor=white)](https://kafka.apache.org)
-[![Zed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/zed-industries/zed/main/assets/badge/v0.json)](https://zed.dev)
-
 ### Prerequisites
 - Java 25+.
 - Docker & Docker Compose.
