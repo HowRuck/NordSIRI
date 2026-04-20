@@ -51,8 +51,9 @@ public class TripUpdateRepository {
                 route_id,
                 start_date,
                 start_time,
+                start_time_overflow_days,
                 received_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (id) DO UPDATE SET
                 entity_id = EXCLUDED.entity_id,
                 feed_id = EXCLUDED.feed_id,
@@ -60,6 +61,7 @@ public class TripUpdateRepository {
                 route_id = EXCLUDED.route_id,
                 start_date = EXCLUDED.start_date,
                 start_time = EXCLUDED.start_time,
+                start_time_overflow_days = EXCLUDED.start_time_overflow_days,
                 received_at = EXCLUDED.received_at
             """;
 
@@ -89,7 +91,12 @@ public class TripUpdateRepository {
                         ? null
                         : Time.valueOf(descriptor.startTime())
                 );
-                preparedStatement.setTimestamp(8, Timestamp.from(currentTime));
+                preparedStatement.setObject(
+                    8,
+                    descriptor.startTimeOverflowDays(),
+                    Types.SMALLINT
+                );
+                preparedStatement.setTimestamp(9, Timestamp.from(currentTime));
             }
         );
     }

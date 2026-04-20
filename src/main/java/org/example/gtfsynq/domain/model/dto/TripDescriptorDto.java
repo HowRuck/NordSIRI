@@ -29,6 +29,8 @@ public record TripDescriptorDto(
     LocalDate startDate,
     /** The start time of this trip descriptor */
     LocalTime startTime,
+    /** The overflow days for the start time of this trip descriptor */
+    Short startTimeOverflowDays,
     /** The hash of this trip descriptor for deduplication */
     long hash
 ) {
@@ -57,10 +59,15 @@ public record TripDescriptorDto(
             tripDescriptor.hasStartDate(),
             tripDescriptor.getStartDate()
         );
-        var startTime = GtfsFeedFormatter.nullableTime(
+        var startTimePair = GtfsFeedFormatter.nullableTime(
             tripDescriptor.hasStartTime(),
             tripDescriptor.getStartTime()
         );
+        var startTime = (startTimePair != null) ? startTimePair.value0() : null;
+        var startTimeOverflowDays = (startTimePair != null)
+            ? startTimePair.value1()
+            : null;
+
         var directionId = GtfsFeedFormatter.nullableInteger(
             tripDescriptor.hasDirectionId(),
             tripDescriptor.getDirectionId()
@@ -85,6 +92,7 @@ public record TripDescriptorDto(
             directionId,
             startDate,
             startTime,
+            startTimeOverflowDays,
             hash
         );
     }

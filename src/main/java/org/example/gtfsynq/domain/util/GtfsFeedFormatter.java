@@ -1,5 +1,6 @@
 package org.example.gtfsynq.domain.util;
 
+import io.arxila.javatuples.Pair;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -34,10 +35,25 @@ public class GtfsFeedFormatter {
      * @param time the time string
      * @return the parsed LocalTime, or null if the input is null or blank
      */
-    public static LocalTime parseTime(String time) {
-        return (time == null || time.isBlank())
-            ? null
-            : LocalTime.parse(time, GTFS_TIME);
+    public static Pair<LocalTime, Short> parseTime(String time) {
+        if (time == null || time.isBlank()) {
+            return null;
+        }
+
+        try {
+            return Pair.of(LocalTime.parse(time, GTFS_TIME), (short) 0);
+        } catch (Exception ignored) {
+            var parts = time.split(":");
+
+            var hours = Integer.parseInt(parts[0]);
+            var minutes = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
+            var seconds = parts.length > 2 ? Integer.parseInt(parts[2]) : 0;
+
+            var dayOffset = (short) (hours / 24);
+            hours = hours % 24;
+
+            return Pair.of(LocalTime.of(hours, minutes, seconds), dayOffset);
+        }
     }
 
     /**
@@ -90,7 +106,10 @@ public class GtfsFeedFormatter {
      * @param value the value to return if present
      * @return the input LocalTime if present, or null if not present
      */
-    public static LocalTime nullableTime(boolean present, String value) {
+    public static Pair<LocalTime, Short> nullableTime(
+        boolean present,
+        String value
+    ) {
         return present ? parseTime(value) : null;
     }
 
