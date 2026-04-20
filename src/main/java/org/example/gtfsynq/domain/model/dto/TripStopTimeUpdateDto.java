@@ -50,9 +50,6 @@ public record TripStopTimeUpdateDto(
         Instant receivedAt,
         StopTimeUpdate stu
     ) {
-        var arrival = stu.hasArrival() ? stu.getArrival() : null;
-        var departure = stu.hasDeparture() ? stu.getDeparture() : null;
-
         var stopSequence = GtfsFeedFormatter.nullableInteger(
             stu.hasStopSequence(),
             stu.getStopSequence()
@@ -61,6 +58,8 @@ public record TripStopTimeUpdateDto(
             stu.hasStopId(),
             stu.getStopId()
         );
+
+        var arrival = stu.hasArrival() ? stu.getArrival() : null;
 
         Integer arrivalDelay = null;
         Instant arrivalTime = null;
@@ -83,6 +82,8 @@ public record TripStopTimeUpdateDto(
             );
         }
 
+        var departure = stu.hasDeparture() ? stu.getDeparture() : null;
+
         Integer departureDelay = null;
         Instant departureTime = null;
         Instant scheduledDepartureTime = null;
@@ -99,8 +100,8 @@ public record TripStopTimeUpdateDto(
             );
 
             scheduledDepartureTime = GtfsFeedFormatter.nullableInstant(
-                arrival.hasScheduledTime(),
-                arrival.getScheduledTime()
+                departure.hasScheduledTime(),
+                departure.getScheduledTime()
             );
         }
 
