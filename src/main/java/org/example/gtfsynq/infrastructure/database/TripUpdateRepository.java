@@ -128,6 +128,7 @@ public class TripUpdateRepository {
                 assigned_stop_id,
                 hash
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (trip_update_id, received_at, stop_sequence) DO NOTHING
             """;
 
         jdbcTemplate.batchUpdate(
