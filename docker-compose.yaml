@@ -2,7 +2,7 @@ services:
     kafka:
         image: docker.io/apache/kafka:4.2.0
         container_name: kafka
-        network_mode: host # <-- Add this
+        network_mode: host
         environment:
             KAFKA_NODE_ID: 1
             KAFKA_PROCESS_ROLES: broker,controller
@@ -26,7 +26,7 @@ services:
     timescaledb:
         image: docker.io/timescale/timescaledb-ha:pg18
         container_name: timescaledb
-        network_mode: host # <-- Add this
+        network_mode: host
         environment:
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: postgres
