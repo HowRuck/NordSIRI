@@ -1,5 +1,5 @@
 
-CREATE TYPE IF NOT EXISTS feed_id_enum AS ENUM ('gtfs-de', 'entur');
+CREATE TYPE feed_id_enum AS ENUM ('gtfs-de', 'entur');
 
 CREATE TABLE IF NOT EXISTS trip_updates (
     id BIGINT NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS trip_updates (
 CREATE INDEX IF NOT EXISTS idx_trip_updates_feed_id
     ON trip_updates (feed_id);
 
-CREATE TYPE IF NOT EXISTS schedule_relationship_enum AS ENUM ('SCHEDULED', 'SKIPPED', 'NO_DATA');
+CREATE TYPE schedule_relationship_enum AS ENUM ('SCHEDULED', 'SKIPPED', 'NO_DATA');
 
 CREATE TABLE IF NOT EXISTS trip_update_stop_time_updates (
     trip_update_id BIGINT NOT NULL REFERENCES trip_updates(id),
