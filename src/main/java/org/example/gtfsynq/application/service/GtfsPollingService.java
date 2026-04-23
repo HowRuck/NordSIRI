@@ -6,7 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.gtfsynq.infrastructure.protobuf.GtfsNativeFilter;
 import org.example.gtfsynq.util.SizeFormat;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 /**
  * Service for polling a GTFS feed
@@ -88,6 +90,15 @@ public class GtfsPollingService {
                         );
                     }
                 });
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            log.warn("Rate limit hit while polling GTFS feed: {}", feedUrl);
+
+            var retryAfter = e.getResponseHeaders().getFirst("Retry-After");
+            if (retryAfter != null) {
+                log.warn("Retry-After: {} seconds", retryAfter);
+            }
+
+            return null;
         } catch (Exception e) {
             log.error("Failed to poll GTFS feed stream", e);
             return null;

@@ -4,12 +4,15 @@ import com.google.protobuf.CodedInputStream;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.hashing.LongHashFunction;
 import org.apache.kafka.shaded.com.google.protobuf.WireFormat;
+import org.example.gtfsynq.infrastructure.protobuf.offheap.OffHeapHashStore;
+import org.example.gtfsynq.infrastructure.protobuf.offheap.OffHeapLongTable;
 import org.example.gtfsynq.util.SizeFormat;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -30,7 +33,71 @@ public class GtfsNativeFilter {
     /**
      * A typed entity with the entity's bytes and type
      */
-    public record TypedEntity(byte[] bytes, long type) {}
+    public record TypedEntity(
+        byte[] bytes,
+        long type,
+        boolean isNew,
+        int[] changedFields
+    ) {
+        /**
+         * Encodes this TypedEntity into a byte array
+         */
+        public byte[] encode() {
+            var bytesLen = (bytes == null) ? 0 : bytes.length;
+            var fieldsLen = (changedFields == null) ? 0 : changedFields.length;
+
+            // Calculate total size and allocate buffer
+            // 8 (type) + 1 (isNew) + 4 (bytesLen) + bytesLen + 4 (fieldsLen) + fieldsLen * 4
+            var totalSize = 8 + 1 + 4 + bytesLen + 4 + (fieldsLen * 4);
+            var buffer = ByteBuffer.allocate(totalSize);
+
+            // Write metadata
+            buffer.putLong(type);
+            buffer.put((byte) (isNew ? 1 : 0));
+
+            // Write main payload (bytes)
+            buffer.putInt(bytesLen);
+            if (bytesLen > 0) {
+                buffer.put(bytes);
+            }
+
+            // Write changed fields metadata
+            buffer.putInt(fieldsLen);
+            if (fieldsLen > 0) {
+                for (var field : changedFields) {
+                    buffer.putInt(field);
+                }
+            }
+
+            return buffer.array();
+        }
+
+        /**
+         * Decodes a byte array back into a TypedEntity record
+         */
+        public static TypedEntity decode(byte[] data) {
+            var buffer = ByteBuffer.wrap(data);
+
+            var type = buffer.getLong();
+            var isNew = buffer.get() == 1;
+
+            // Extract bytes
+            var bytesLen = buffer.getInt();
+            var bytes = new byte[bytesLen];
+            if (bytesLen > 0) {
+                buffer.get(bytes);
+            }
+
+            // Extract changedFields
+            var fieldsLen = buffer.getInt();
+            var changedFields = new int[fieldsLen];
+            for (int i = 0; i < fieldsLen; i++) {
+                changedFields[i] = buffer.getInt();
+            }
+
+            return new TypedEntity(bytes, type, isNew, changedFields);
+        }
+    }
 
     @Value("${gtfs.readBufferSize:8}")
     private int readBufferSizeMb;
@@ -87,9 +154,14 @@ public class GtfsNativeFilter {
 
         var existingHash = stateStore.get(hashedId);
 
-        if (existingHash == OffHeapHashStore.EMPTY_VALUE) {
+        if (existingHash == OffHeapLongTable.EMPTY_VALUE) {
             stateStore.put(hashedId, hashedBytes);
-            return new TypedEntity(entityBytes, scanResult.type());
+            return new TypedEntity(
+                entityBytes,
+                scanResult.type(),
+                true,
+                new int[0]
+            );
         }
 
         if (hashedBytes == existingHash) {
@@ -98,7 +170,12 @@ public class GtfsNativeFilter {
 
         stateStore.put(hashedId, hashedBytes);
 
-        return new TypedEntity(entityBytes, scanResult.type());
+        return new TypedEntity(
+            entityBytes,
+            scanResult.type(),
+            false,
+            new int[0]
+        );
     }
 
     /**

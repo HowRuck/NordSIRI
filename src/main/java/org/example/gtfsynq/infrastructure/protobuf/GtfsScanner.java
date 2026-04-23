@@ -6,7 +6,7 @@ import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Scans GTFS-RT entities and extracts the stable ID and entity type
+ * Scans GTFS-RT entities and extracts the stable ID and entity type.
  */
 @Slf4j
 public class GtfsScanner {
@@ -23,12 +23,12 @@ public class GtfsScanner {
     private static final int FIELD_START_DATE = 3;
 
     /**
-     * Represents the result of scanning a GTFS-RT entity, including the stable ID and entity type
+     * Represents the result of scanning a GTFS-RT entity, including the stable ID and entity type.
      */
     public record ScanResult(String id, int type) {}
 
     /**
-     * Scans a GTFS-RT entity and returns the result, including the stable ID and entity type
+     * Scans a GTFS-RT entity and returns the result, including the stable ID and entity type.
      *
      * @param cis the CodedInputStream to read from
      * @return the scan result, including the stable ID and entity type
@@ -65,7 +65,7 @@ public class GtfsScanner {
     }
 
     /**
-     * Finds the stable ID of a GTFS-RT entity by reading the nested trip descriptor
+     * Finds the stable ID of a GTFS-RT entity by reading the nested trip descriptor.
      *
      * @param cis the CodedInputStream to read from
      * @return the stable ID of the entity, or null if not found
@@ -90,7 +90,7 @@ public class GtfsScanner {
     }
 
     /**
-     * Parses the nested trip descriptor and returns the stable ID
+     * Parses the nested trip descriptor and returns the stable ID.
      *
      * @param cis the CodedInputStream to read from
      * @return the stable ID of the trip, or null if not found

@@ -4,6 +4,14 @@ spring:
             enabled: true
     application:
         name: SiriAnalyzer
+    datasource:
+        url: jdbc:postgresql://localhost:5432/gtfsynq
+        username: postgres
+        password: postgres
+    sql:
+        init:
+            mode: always
+            schema-locations: classpath:schema.sql
     data:
         redis:
             host: localhost
@@ -11,6 +19,9 @@ spring:
     kafka:
         topic: gtfs-trip-updates
         bootstrap-servers: localhost:9092
+        streams:
+            properties:
+                auto.create.topics: "true"
 
 gtfs:
     fetch:
@@ -21,7 +32,6 @@ gtfs:
         entur:
             - https://api.entur.io/realtime/v1/gtfs-rt/trip-updates
             - https://api.entur.io/realtime/v1/gtfs-rt/alerts
-            - https://api.entur.io/realtime/v1/gtfs-rt/vehicle-positions
 
 management:
     metrics:
