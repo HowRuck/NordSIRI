@@ -18,7 +18,7 @@ public class GtfsIngestionAsyncService {
         String feedUrl
     ) {
         var entities = gtfsPollingService.pollStream(feedId, feedUrl);
-        var _ = gtfsPollingService.downloadToBytes(feedUrl);
+
         gtfsKafkaProducer.sendTripUpdates(feedId, entities);
         return CompletableFuture.completedFuture(null);
     }
