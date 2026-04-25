@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
  */
 public record TripStopTimeUpdateDto(
     /** The trip key of this stop time update */
-    @NonNull long tripKey,
+    long tripKey,
     /** The feed ID of this stop time update */
     @NonNull String feedId,
     /** The timestamp when this stop time update was received */
