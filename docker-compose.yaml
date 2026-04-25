@@ -1,4 +1,22 @@
 services:
+    app:
+        build:
+            context: .
+            dockerfile: docker/Dockerfile
+        container_name: gtfsynq-app
+        network_mode: host
+        depends_on:
+            - kafka
+            - timescaledb
+        environment:
+            SPRING_PROFILES_ACTIVE: prod
+            SPRING_DATASOURCE_URL: jdbc:postgresql://host.containers.internal:5432/gtfsynq
+            SPRING_DATASOURCE_USERNAME: postgres
+            SPRING_DATASOURCE_PASSWORD: postgres
+            SPRING_KAFKA_BOOTSTRAP_SERVERS: host.containers.internal:9092
+        ports:
+            - "8888:8888"
+
     kafka:
         image: docker.io/apache/kafka:4.2.0
         container_name: kafka
