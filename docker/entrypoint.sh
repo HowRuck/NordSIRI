@@ -15,6 +15,5 @@ exec java \
   -XX:+ExitOnOutOfMemoryError \
   -Dserver.port=8888 \
   -Dspring.aot.enabled=true \
-  -Dspring.main.lazy-initialization=true \
   -Dhibernate.bytecode.use_reflection_optimizer=true \
   -jar /app/app.jar
