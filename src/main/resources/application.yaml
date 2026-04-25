@@ -12,6 +12,8 @@ spring:
         init:
             mode: always
             schema-locations: classpath:schema.sql
+    server:
+      port: 8888
     data:
         redis:
             host: localhost
@@ -32,6 +34,11 @@ gtfs:
         entur:
             - https://api.entur.io/realtime/v1/gtfs-rt/trip-updates
             - https://api.entur.io/realtime/v1/gtfs-rt/alerts
+        helsinki-hsl:
+            - https://realtime.hsl.fi/realtime/trip-updates/v2/hsl
+        ovapi:
+            - https://gtfs.ovapi.nl/nl/tripUpdates.pb
+            - https://gtfs.ovapi.nl/nl/alerts.pb
 
 management:
     metrics:
