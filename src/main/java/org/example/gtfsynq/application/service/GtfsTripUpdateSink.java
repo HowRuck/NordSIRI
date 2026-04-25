@@ -79,7 +79,7 @@ public class GtfsTripUpdateSink {
     /**
      * Flushes the current buffer on a schedule.
      */
-    @Scheduled(fixedDelayString = "${gtfs.sink.flush-interval-ms:1000}")
+    @Scheduled(fixedDelayString = "${gtfs.sink.flush-interval-ms:10000}")
     public void scheduledFlush() {
         if (!enabled) {
             return;
