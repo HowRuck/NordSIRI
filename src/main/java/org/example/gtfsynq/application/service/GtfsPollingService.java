@@ -8,7 +8,6 @@ import org.example.gtfsynq.util.SizeFormat;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
 /**
  * Service for polling a GTFS feed
@@ -18,7 +17,7 @@ import org.springframework.web.client.RestClientException;
 @RequiredArgsConstructor
 public class GtfsPollingService {
 
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient;
     private final GtfsNativeFilter nativeFilter;
 
     /**
