@@ -213,9 +213,13 @@ public class GtfsNativeFilter {
                 var headerBytes = cis.readByteArray();
 
                 if (!checkHeaderChanged(feedId, feedUrl, headerBytes)) {
-                    log.info("Header hash matches existing hash, breaking");
+                    log.info(
+                        "Header hash matches existing hash for feed {}[{}]",
+                        feedId,
+                        feedUrl
+                    );
 
-                    break;
+                    return changedEntities;
                 }
             } else if (fieldNumber == 2) {
                 var entityBytes = cis.readByteArray();
@@ -232,7 +236,7 @@ public class GtfsNativeFilter {
         lastUpdateCount = changedEntities.size();
 
         log.info(
-            "Finished parsing GTFS feed {}[{}] {} changed and {} entities total",
+            "Finished parsing feed {}[{}] {} changed and {} entities total",
             feedId,
             feedUrl,
             SizeFormat.formatNumber(numChanged),
