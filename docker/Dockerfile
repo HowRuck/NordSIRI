@@ -1,4 +1,4 @@
-FROM docker.io/maven:3.9-eclipse-temurin-25 AS builder
+FROM docker.io/maven:3.9-eclipse-temurin-26 AS builder
 
 WORKDIR /app
 
@@ -10,13 +10,17 @@ RUN mvn dependency:resolve
 COPY src ./src
 RUN mvn package -DskipTests
 
-# Stage 2: Run container
-FROM container-registry.oracle.com/graalvm/jdk:25
+# Stage 2: Runtime optimized for CRaC
+FROM docker.io/azul/zulu-openjdk:26-jre-crac-latest
 
 WORKDIR /app
 
-# Copy built jar into the runtime image with a simple name
-COPY --from=builder /app/target/SiriAnalyzer-0.0.1-SNAPSHOT.jar ./SiriAnalyzer.jar
+# Copy built jar
+COPY --from=builder /app/target/SiriAnalyzer-0.0.1-SNAPSHOT.jar ./app.jar
+
+# CRaC requires checkpoint directory
+RUN mkdir -p /crac
+
 COPY docker/entrypoint.sh .
 
 RUN chmod +x entrypoint.sh
