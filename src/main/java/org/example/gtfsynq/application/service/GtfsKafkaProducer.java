@@ -46,14 +46,14 @@ public class GtfsKafkaProducer {
             return;
         }
 
-        log.info("Sending {} trip updates to Kafka", entities.size());
+        log.debug("Sending {} trip updates to Kafka", entities.size());
 
         for (var entity : entities) {
             kafka.send(topic, feedId, entity.bytes());
         }
 
         var endTime = System.currentTimeMillis();
-        log.info(
+        log.debug(
             "Sent {} trip updates to Kafka in {}ms",
             entities.size(),
             endTime - startTime

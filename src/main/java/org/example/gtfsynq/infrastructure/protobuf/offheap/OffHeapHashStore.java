@@ -219,7 +219,7 @@ public class OffHeapHashStore implements AutoCloseable {
         currentMinute = (int) (System.currentTimeMillis() / 60000);
     }
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 60000)
     public void printLoadPercentage() {
         var stamp = lock.readLock();
         var occupied = 0;

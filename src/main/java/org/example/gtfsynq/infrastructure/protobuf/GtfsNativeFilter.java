@@ -232,9 +232,11 @@ public class GtfsNativeFilter {
         lastUpdateCount = changedEntities.size();
 
         log.info(
-            "Parsed {} entities, {} changed",
-            SizeFormat.formatNumber(numEntities),
-            SizeFormat.formatNumber(numChanged)
+            "Finished parsing GTFS feed {}[{}] {} changed and {} entities total",
+            feedId,
+            feedUrl,
+            SizeFormat.formatNumber(numChanged),
+            SizeFormat.formatNumber(numEntities)
         );
 
         return changedEntities;

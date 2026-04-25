@@ -70,9 +70,14 @@ public class GtfsPollingService {
                         .getHeaders()
                         .getContentLength();
 
-                    log.info(
+                    var responseLengthStr =
+                        responseLength != 0
+                            ? SizeFormat.humanBytes(responseLength)
+                            : "unknown";
+
+                    log.debug(
                         "Received GTFS feed stream of size {} in {} ms",
-                        SizeFormat.humanBytes(responseLength),
+                        responseLengthStr,
                         System.currentTimeMillis() - startTime
                     );
 
@@ -83,7 +88,7 @@ public class GtfsPollingService {
                             inputStream
                         );
                     } finally {
-                        log.info(
+                        log.debug(
                             "Finished processing GTFS feed stream in {} ms",
                             System.currentTimeMillis() - startTime
                         );
