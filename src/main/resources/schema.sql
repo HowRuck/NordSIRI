@@ -8,7 +8,7 @@ DROP TYPE IF EXISTS feed_id_enum CASCADE;
 DROP TYPE IF EXISTS schedule_relationship_enum CASCADE;
 
 -- 2. Recreate Enums
-CREATE TYPE feed_id_enum AS ENUM ('gtfs-de', 'entur', 'helsinki-hsl', 'ovapi');
+CREATE TYPE feed_id_enum AS ENUM ('gtfs-de', 'entur', 'helsinki-hsl', 'ovapi', 'sncf');
 CREATE TYPE schedule_relationship_enum AS ENUM ('SCHEDULED', 'SKIPPED', 'NO_DATA', 'UNSCHEDULED', 'ADDED');
 
 -- 3. Recreate Parent Table

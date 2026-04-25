@@ -39,6 +39,9 @@ gtfs:
         ovapi:
             - https://gtfs.ovapi.nl/nl/tripUpdates.pb
             - https://gtfs.ovapi.nl/nl/alerts.pb
+        sncf:
+            - https://proxy.transport.data.gouv.fr/resource/sncf-gtfs-rt-trip-updates
+            - https://proxy.transport.data.gouv.fr/resource/sncf-gtfs-rt-service-alerts
 
 management:
     metrics:
