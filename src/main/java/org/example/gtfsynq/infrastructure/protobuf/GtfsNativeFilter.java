@@ -214,7 +214,7 @@ public class GtfsNativeFilter {
 
                 if (!checkHeaderChanged(feedId, feedUrl, headerBytes)) {
                     log.info(
-                        "Header hash matches existing hash for feed {}[{}]",
+                        "Header hash match for feed {}[{}]",
                         feedId,
                         feedUrl
                     );
