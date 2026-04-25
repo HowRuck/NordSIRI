@@ -11,15 +11,13 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 # Stage 2: Runtime optimized for CRaC
-FROM docker.io/azul/zulu-openjdk:26-jre-crac-latest
+FROM docker.io/eclipse-temurin:26-jre
 
 WORKDIR /app
 
 # Copy built jar
 COPY --from=builder /app/target/SiriAnalyzer-0.0.1-SNAPSHOT.jar ./app.jar
 
-# CRaC requires checkpoint directory
-RUN mkdir -p /crac
 
 COPY docker/entrypoint.sh .
 
