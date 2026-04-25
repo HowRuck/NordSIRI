@@ -25,7 +25,7 @@ public class RestConfig {
      * <p>
      * Defaults to 20 seconds if not specified
      */
-    @Value("${rest.connectTimeoutSeconds:20}")
+    @Value("${rest.connectTimeoutSeconds:40}")
     int connectTimeoutSeconds;
 
     /**
