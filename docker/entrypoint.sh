@@ -5,8 +5,7 @@ JAVA_OPTS="\
   -XX:+UseG1GC \
   -XX:+UseStringDeduplication \
   -XX:+UnlockExperimentalVMOptions \
-  -XX:UseCompactObjectHeaders=true \
-  -XX:+UseLaydenOptimizations \
+  -XX:+UseCompactObjectHeaders \
   # Returns RAM to OS quickly when idle
   -XX:G1PeriodicGCInterval=30000 \
   -XX:MinHeapFreeRatio=10 \
