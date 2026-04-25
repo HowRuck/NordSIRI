@@ -1,4 +1,4 @@
-FROM docker.io/maven:3.9-eclipse-temurin-25-alpine AS builder
+FROM docker.io/maven:3.9-eclipse-temurin-26 AS builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 # Stage 2: Run container
-FROM ghcr.io/graalvm/jdk-community:25
+FROM docker.io/azul/zulu-openjdk:26-jre-crac-latest
 
 WORKDIR /app
 
