@@ -13,7 +13,7 @@ spring:
             mode: always
             schema-locations: classpath:schema.sql
     server:
-      port: 8888
+        port: 8888
     data:
         redis:
             host: localhost
@@ -27,7 +27,7 @@ spring:
 
 gtfs:
     fetch:
-        interval-ms: 20000
+        interval-ms: 30000
     feeds:
         gtfs-de:
             - https://realtime.gtfs.de/realtime-free.pb
