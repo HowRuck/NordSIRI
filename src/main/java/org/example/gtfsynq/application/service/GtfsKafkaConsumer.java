@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -73,8 +73,8 @@ public class GtfsKafkaConsumer {
      *
      * @param builder Kafka Streams topology builder
      */
-    @Autowired
-    public void consume(StreamsBuilder builder) {
+    @Bean
+    public StreamsBuilder consume(StreamsBuilder builder) {
         var messageStream = builder.stream(
             topic,
             Consumed.with(keySerde, valueSerde)
@@ -84,5 +84,7 @@ public class GtfsKafkaConsumer {
             .mapValues(this::parseFeedEntity)
             .filter((key, value) -> Objects.nonNull(value))
             .foreach(this::routeToSink);
+
+        return builder;
     }
 }
