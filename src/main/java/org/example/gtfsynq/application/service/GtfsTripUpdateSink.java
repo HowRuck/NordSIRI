@@ -8,7 +8,6 @@ import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.gtfsynq.domain.model.dto.TripStopTimeUpdateDto;
 import org.example.gtfsynq.domain.model.dto.TripUpdateDto;
 import org.example.gtfsynq.domain.service.DatabaseDeduplicationService;
 import org.example.gtfsynq.infrastructure.database.TripUpdateRepository;
