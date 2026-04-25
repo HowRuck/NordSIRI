@@ -1,4 +1,4 @@
-FROM docker.io/maven:3.9-eclipse-temurin-26 AS builder
+FROM docker.io/maven:3.9-eclipse-temurin-25 AS builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 # Stage 2: Run container
-FROM docker.io/azul/zulu-openjdk:26-jre-crac-latest
+FROM container-registry.oracle.com/graalvm/jdk:25
 
 WORKDIR /app
 
@@ -21,4 +21,4 @@ COPY docker/entrypoint.sh .
 
 RUN chmod +x entrypoint.sh
 
-CMD ["./entrypoint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]
