@@ -53,8 +53,6 @@ public class GtfsIngestionService {
                 CompletableFuture.allOf(
                     futures.toArray(new CompletableFuture[0])
                 ).join();
-
-                log.info("----------");
             }
 
             var endTime = System.currentTimeMillis();
