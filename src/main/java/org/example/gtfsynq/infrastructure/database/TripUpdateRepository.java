@@ -35,7 +35,7 @@ public class TripUpdateRepository {
         }
 
         var sql = """
-            INSERT INTO trip_updates (
+            INSERT INTO rt_trip_updates_meta (
                 entity_id,
                 feed_id,
                 id,
@@ -107,7 +107,7 @@ public class TripUpdateRepository {
         }
 
         var sql = """
-            INSERT INTO trip_update_stop_time_updates (
+            INSERT INTO rt_stop_time_updates_ht (
                 trip_update_id,
                 feed_id,
                 feed_ts,
