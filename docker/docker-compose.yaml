@@ -10,7 +10,6 @@ services:
             timescaledb:
                 condition: service_healthy
         environment:
-            SPRING_PROFILES_ACTIVE: prod
             SPRING_DATASOURCE_URL: jdbc:postgresql://timescaledb:5432/gtfsynq
             SPRING_DATASOURCE_USERNAME: postgres
             SPRING_DATASOURCE_PASSWORD: postgres
