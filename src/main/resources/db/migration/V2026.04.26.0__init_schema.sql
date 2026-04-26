@@ -49,3 +49,4 @@ CREATE INDEX idx_trip_updates_feed_id ON rt_trip_updates_meta (feed_id);
 -- Optimize feed/time-range queries on stop-time updates.
 CREATE INDEX idx_stop_updates_feed_ts
     ON rt_stop_time_updates_ht (feed_id, feed_ts DESC);
+
