@@ -12,7 +12,7 @@ import net.openhft.hashing.LongHashFunction;
 @NoArgsConstructor
 public final class FeedHashing {
 
-    private static final LongHashFunction STATE_HASHER = LongHashFunction.xx();
+    private static final LongHashFunction STATE_HASHER = LongHashFunction.xx3();
     private static final int DEFAULT_BUFFER_SIZE = 256;
 
     /**
