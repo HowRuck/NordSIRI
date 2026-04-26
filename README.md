@@ -3,11 +3,11 @@
 
    A modern, high-performance application for processing, storing and analyzing *GTFS-RT (General Transit Feed Specification - Real-Time)* data
 
-   [![Spring Boot](https://img.shields.io/badge/Spring_Boot-4-6DB33F?logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
-   [![Java](https://img.shields.io/badge/Java-25-oracle?logo=java&logoColor=white)](https://www.java.com)
-   [![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL-468B97?logo=timescale&logoColor=white)](https://www.timescale.com)
-   [![Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?logo=apache-kafka&logoColor=white)](https://kafka.apache.org)
-   [![Zed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/zed-industries/zed/main/assets/badge/v0.json)](https://zed.dev)
+   ![Spring](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
+   ![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)
+   ![TimescaleDB](https://img.shields.io/badge/timescaledb-36764?style=for-the-badge&logo=Timescale&logoColor=black&color=%23E6EE8A)
+   ![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-000?style=for-the-badge&logo=apachekafka)
+   ![Zed](https://img.shields.io/badge/zed-084CCF.svg?style=for-the-badge&logo=zedindustries&logoColor=white)
 
 </div>
 
@@ -19,15 +19,13 @@
 - **Kafka Integration**: Scalable message streaming with Apache Kafka.
 - **Protobuf Support**: Efficient serialization/deserialization of GTFS-RT messages.
 - **Metrics & Monitoring**: Built-in Actuator endpoints with Prometheus support.
-- **Native Compilation**: GraalVM native image support for fast startup and low memory footprint.
-
 
 ## 🛠️ **Getting Started**
 
 ### Prerequisites
-- Java 25+.
-- Docker & Docker Compose.
-- Maven 3.9+.
+- Java 26
+- Docker & Docker Compose
+- Maven 3.9
 
 ### Quick Start
 1. **Clone the repository**:
@@ -36,18 +34,26 @@
    cd GTFSynq
    ```
 
-2. **Start the infrastructure**:
+2. **Fast setup with full Docker build** (recommended):
    ```bash
-   docker-compose up -d
+   docker compose -f docker/docker-compose.yaml up -d
    ```
+   This builds the application image and starts all services (Kafka, TimescaleDB, app).
 
-3. **Build and run**:
-   ```bash
-   ./run.sh
-   ```
-   or use Zed's built-in Maven support.
+   Access the API at `http://localhost:8888`.
 
-4. **Access the API**:
+3. **Or manual local development**:
+   - Start infrastructure:
+     ```bash
+     docker-compose up -d
+     ```
+   - Build and run:
+     ```bash
+     mvn spring-boot:run
+     ```
+     or use Zed's built-in Maven support.
+
+   Access the API:
    - Application: `http://localhost:8080`
    - Actuator: `http://localhost:8080/actuator`
    - Prometheus Metrics: `http://localhost:8080/actuator/prometheus`
@@ -61,8 +67,9 @@ GTFSynq/
 │   └── test/             # Test cases
 ├── docker/               # Docker configurations
 │   ├── Dockerfile        # Multi-stage build
+│   ├── docker-compose.yaml # Full stack with app image build
 │   └── entrypoint.sh     # Container entrypoint
-├── docker-compose.yaml   # Service orchestration
+├── docker-compose.yaml   # Service orchestration (infrastructure only)
 ├── pom.xml               # Maven build configuration
 └── run.sh                # Convenience startup script
 ```
@@ -84,8 +91,8 @@ GTFSynq/
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | **IDE** | [Zed](https://zed.dev) | Ultra-fast, collaborative code editor |
-| **Backend** | [Spring Boot 4](https://spring.io/projects/spring-boot) | Modern Java framework with GraalVM native support |
+| **Backend** | [Spring Boot 4](https://spring.io/projects/spring-boot) | Modern Java framework |
 | **Database** | [TimescaleDB](https://www.timescale.com) | Time-series optimized PostgreSQL for transit data |
 | **Streaming** | [Apache Kafka 4](https://kafka.apache.org) | Distributed event streaming platform |
 | **Protocol Buffers** | Protobuf 4 | Efficient data serialization |
-| **Language** | Java 25 | Latest LTS with cutting-edge features |
+| **Language** | Java 26 | Latest LTS with cutting-edge features |
