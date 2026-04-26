@@ -1,13 +1,12 @@
 package org.example.gtfsynq.infrastructure.persistence.sinks;
 
-import com.google.transit.realtime.GtfsRealtime.FeedEntity;
-import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.gtfsynq.domain.model.FeedEntityWithMetadata;
 import org.example.gtfsynq.domain.model.dto.TripUpdateDto;
 import org.example.gtfsynq.domain.service.DatabaseDeduplicationService;
 import org.example.gtfsynq.infrastructure.database.TripUpdateRepository;
@@ -46,16 +45,17 @@ public class GtfsTripUpdateSink {
      * @param feedId feed identifier from Kafka key
      * @param entity decoded GTFS-RT feed entity
      */
-    public void accept(String feedId, FeedEntity entity) {
+    public void accept(String feedId, FeedEntityWithMetadata entityWithMeta) {
+        var entity = entityWithMeta.entity();
+
         if (!enabled || entity == null || !entity.hasTripUpdate()) {
             return;
         }
 
-        var currentTime = Instant.now();
         var rawUpdateDto = TripUpdateDto.fromEntity(
             entity,
             feedId,
-            currentTime
+            entityWithMeta.feedTs()
         );
 
         bufferLock.lock();

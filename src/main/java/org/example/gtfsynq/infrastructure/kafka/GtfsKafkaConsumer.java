@@ -2,12 +2,14 @@ package org.example.gtfsynq.infrastructure.kafka;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
+import java.time.Instant;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.example.gtfsynq.domain.model.FeedEntityWithMetadata;
 import org.example.gtfsynq.infrastructure.persistence.sinks.GtfsTripUpdateSink;
 import org.example.gtfsynq.infrastructure.protobuf.GtfsNativeFilter.BinaryFeedEntityWithMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,11 +43,17 @@ public class GtfsKafkaConsumer {
      * @param value encoded Kafka value
      * @return parsed feed entity, or {@code null} if the payload is invalid or not a TripUpdate
      */
-    public FeedEntity parseFeedEntity(byte[] bytes) {
+    public FeedEntityWithMetadata parseFeedEntity(byte[] bytes) {
         try {
             var typedEntity = BinaryFeedEntityWithMetadata.decode(bytes);
 
-            return FeedEntity.parseFrom(typedEntity.bytes());
+            var feedEntity = FeedEntity.parseFrom(typedEntity.bytes());
+
+            return new FeedEntityWithMetadata(
+                feedEntity,
+                typedEntity.type(),
+                Instant.ofEpochSecond(typedEntity.ts())
+            );
         } catch (InvalidProtocolBufferException e) {
             log.error("Failed to parse FeedEntity", e);
             return null;
@@ -61,7 +69,7 @@ public class GtfsKafkaConsumer {
      * @param feedId Kafka key / feed identifier
      * @param entity parsed GTFS feed entity
      */
-    public void routeToSink(String feedId, FeedEntity entity) {
+    public void routeToSink(String feedId, FeedEntityWithMetadata entity) {
         if (entity == null) {
             return;
         }
