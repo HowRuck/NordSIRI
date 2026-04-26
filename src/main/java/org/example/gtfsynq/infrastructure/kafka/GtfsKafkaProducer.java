@@ -38,7 +38,7 @@ public class GtfsKafkaProducer {
     @Async
     public void sendTripUpdates(
         String feedId,
-        List<GtfsNativeFilter.TypedEntity> entities
+        List<GtfsNativeFilter.BinaryFeedEntityWithMetadata> entities
     ) {
         var startTime = System.currentTimeMillis();
 
@@ -49,7 +49,7 @@ public class GtfsKafkaProducer {
         log.debug("Sending {} trip updates to Kafka", entities.size());
 
         for (var entity : entities) {
-            kafka.send(topic, feedId, entity.bytes());
+            kafka.send(topic, feedId, entity.encode());
         }
 
         var endTime = System.currentTimeMillis();

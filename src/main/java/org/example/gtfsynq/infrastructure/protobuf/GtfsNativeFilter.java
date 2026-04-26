@@ -5,6 +5,8 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -31,71 +33,53 @@ public class GtfsNativeFilter {
     private int lastUpdateCount = 10_000;
 
     /**
-     * A typed entity with the entity's bytes and type
+     * A typed entity with the entity's bytes and metadata (type and timestamp)
      */
-    public record TypedEntity(
+    public record BinaryFeedEntityWithMetadata(
         byte[] bytes,
         long type,
-        boolean isNew,
-        int[] changedFields
+        long ts
     ) {
         /**
-         * Encodes this TypedEntity into a byte array
+         * Encodes this {@code BinaryFeedEntityWithMetadata} into a byte array
          */
         public byte[] encode() {
-            var bytesLen = (bytes == null) ? 0 : bytes.length;
-            var fieldsLen = (changedFields == null) ? 0 : changedFields.length;
+            var payloadLength = bytes != null ? bytes.length : 0;
 
-            // Calculate total size and allocate buffer
-            // 8 (type) + 1 (isNew) + 4 (bytesLen) + bytesLen + 4 (fieldsLen) + fieldsLen * 4
-            var totalSize = 8 + 1 + 4 + bytesLen + 4 + (fieldsLen * 4);
-            var buffer = ByteBuffer.allocate(totalSize);
+            // [int payloadLength][payload bytes][long type][long ts]
+            var buffer = ByteBuffer.allocate(
+                Integer.BYTES + payloadLength + Long.BYTES + Long.BYTES
+            );
 
-            // Write metadata
-            buffer.putLong(type);
-            buffer.put((byte) (isNew ? 1 : 0));
+            buffer.putInt(payloadLength);
 
-            // Write main payload (bytes)
-            buffer.putInt(bytesLen);
-            if (bytesLen > 0) {
+            if (payloadLength > 0) {
                 buffer.put(bytes);
             }
 
-            // Write changed fields metadata
-            buffer.putInt(fieldsLen);
-            if (fieldsLen > 0) {
-                for (var field : changedFields) {
-                    buffer.putInt(field);
-                }
-            }
+            buffer.putLong(type);
+            buffer.putLong(ts);
 
             return buffer.array();
         }
 
         /**
-         * Decodes a byte array back into a TypedEntity record
+         * Decodes a byte array back into a {@code BinaryFeedEntityWithMetadata} record
          */
-        public static TypedEntity decode(byte[] data) {
+        public static BinaryFeedEntityWithMetadata decode(byte[] data) {
             var buffer = ByteBuffer.wrap(data);
 
-            var type = buffer.getLong();
-            var isNew = buffer.get() == 1;
+            var payloadLength = buffer.getInt();
 
-            // Extract bytes
-            var bytesLen = buffer.getInt();
-            var bytes = new byte[bytesLen];
-            if (bytesLen > 0) {
+            var bytes = new byte[payloadLength];
+            if (payloadLength > 0) {
                 buffer.get(bytes);
             }
 
-            // Extract changedFields
-            var fieldsLen = buffer.getInt();
-            var changedFields = new int[fieldsLen];
-            for (int i = 0; i < fieldsLen; i++) {
-                changedFields[i] = buffer.getInt();
-            }
+            var type = buffer.getLong();
+            var ts = buffer.getLong();
 
-            return new TypedEntity(bytes, type, isNew, changedFields);
+            return new BinaryFeedEntityWithMetadata(bytes, type, ts);
         }
     }
 
@@ -132,18 +116,21 @@ public class GtfsNativeFilter {
     }
 
     /**
-     * Process a single feed entity and return a TypedEntity with the entity's bytes and type
+     * Process a single feed entity and return a {@code BinaryFeedEntityWithMetadata} with the entity's bytes and type
      *
      * @param entityBytes The entity's bytes
      * @param feedIdChars The feed ID as a char array
      * @param feedIdWithPadding The feed ID with padding as a char array
      *
-     * @return A TypedEntity with the entity's bytes and hash
+     * @return A {@code BinaryFeedEntityWithMetadata} with the entity's bytes and hash
      *
      * @throws IOException If an error occurs while reading the entity
      */
-    private TypedEntity processFeedEntity(byte[] entityBytes, String feedId)
-        throws IOException {
+    private BinaryFeedEntityWithMetadata processFeedEntity(
+        byte[] entityBytes,
+        String feedId,
+        Instant feedTs
+    ) throws IOException {
         var entityCis = CodedInputStream.newInstance(entityBytes);
         var scanResult = GtfsScanner.scanEntity(entityCis);
 
@@ -156,11 +143,10 @@ public class GtfsNativeFilter {
 
         if (existingHash == OffHeapLongTable.EMPTY_VALUE) {
             stateStore.put(hashedId, hashedBytes);
-            return new TypedEntity(
+            return new BinaryFeedEntityWithMetadata(
                 entityBytes,
                 scanResult.type(),
-                true,
-                new int[0]
+                feedTs.getEpochSecond()
             );
         }
 
@@ -170,11 +156,10 @@ public class GtfsNativeFilter {
 
         stateStore.put(hashedId, hashedBytes);
 
-        return new TypedEntity(
+        return new BinaryFeedEntityWithMetadata(
             entityBytes,
             scanResult.type(),
-            false,
-            new int[0]
+            feedTs.getEpochSecond()
         );
     }
 
@@ -188,7 +173,7 @@ public class GtfsNativeFilter {
      *
      * @throws IOException If an error occurs while reading the stream
      */
-    public List<TypedEntity> parseNative(
+    public List<BinaryFeedEntityWithMetadata> parseNative(
         String feedId,
         String feedUrl,
         InputStream is
@@ -198,10 +183,14 @@ public class GtfsNativeFilter {
             new BufferedInputStream(is, bufferSize)
         );
 
-        var changedEntities = new ArrayList<TypedEntity>(lastUpdateCount);
+        var changedEntities = new ArrayList<BinaryFeedEntityWithMetadata>(
+            lastUpdateCount
+        );
 
         var numEntities = 0;
         var numChanged = 0;
+
+        var currentTs = Instant.now().truncatedTo(ChronoUnit.SECONDS);
 
         while (!cis.isAtEnd()) {
             var tag = cis.readTag();
@@ -223,7 +212,11 @@ public class GtfsNativeFilter {
                 }
             } else if (fieldNumber == 2) {
                 var entityBytes = cis.readByteArray();
-                var typedEntity = processFeedEntity(entityBytes, feedId);
+                var typedEntity = processFeedEntity(
+                    entityBytes,
+                    feedId,
+                    currentTs
+                );
                 numEntities++;
 
                 if (typedEntity != null) {

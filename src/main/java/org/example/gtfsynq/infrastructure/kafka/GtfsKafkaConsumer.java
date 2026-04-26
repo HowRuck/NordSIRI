@@ -9,6 +9,7 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.example.gtfsynq.infrastructure.persistence.sinks.GtfsTripUpdateSink;
+import org.example.gtfsynq.infrastructure.protobuf.GtfsNativeFilter.BinaryFeedEntityWithMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -42,7 +43,9 @@ public class GtfsKafkaConsumer {
      */
     public FeedEntity parseFeedEntity(byte[] bytes) {
         try {
-            return FeedEntity.parseFrom(bytes);
+            var typedEntity = BinaryFeedEntityWithMetadata.decode(bytes);
+
+            return FeedEntity.parseFrom(typedEntity.bytes());
         } catch (InvalidProtocolBufferException e) {
             log.error("Failed to parse FeedEntity", e);
             return null;
