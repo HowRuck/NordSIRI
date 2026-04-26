@@ -1,0 +1,80 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.0-RC1'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.graalvm.buildtools.native' version '1.1.0'
+    id 'com.google.protobuf' version '0.10.0'
+}
+
+group = 'org.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(26)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // --- Spring Boot Starters ---
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-kafka'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+
+    // --- Core Libraries ---
+    implementation 'org.apache.kafka:kafka-streams'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    implementation 'com.google.protobuf:protobuf-java:4.34.1'
+    implementation 'io.arxila.javatuples:javatuples:2.0.1'
+    implementation 'net.openhft:zero-allocation-hashing:2026.0'
+
+    // --- gRPC & HTTP ---
+    compileOnly 'io.grpc:grpc-all:1.80.0'
+    runtimeOnly 'org.apache.httpcomponents.client5:httpclient5'
+
+    // --- Observability & Database ---
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // --- Annotation Processors ---
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // --- Dev Tools ---
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // --- Testing ---
+    // spring-boot-starter-test includes almost everything (JUnit, Mockito, etc.)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+
+    // Lombok for tests
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:4.34.1'
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.80.0'
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

@@ -16,4 +16,5 @@ exec java \
   -Dserver.port=8888 \
   -Dspring.aot.enabled=true \
   -Dhibernate.bytecode.use_reflection_optimizer=true \
+  -Djava.security.egd=file:/dev/./urandom \
   -jar /app/app.jar
