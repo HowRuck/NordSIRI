@@ -33,7 +33,7 @@ services:
             CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
 
         volumes:
-            - kafka-data:/var/lib/kafka/data
+            - kafka-data-local:/var/lib/kafka/data
 
         healthcheck:
             test: ["CMD-SHELL", "cub kafka-ready -b localhost:9092 1 20"]
@@ -52,7 +52,7 @@ services:
             POSTGRES_PASSWORD: postgres
             POSTGRES_DB: gtfsynq
         volumes:
-            - timescaledb-data:/var/lib/postgresql/data
+            - timescaledb-data-local:/var/lib/postgresql/data
         healthcheck:
             test:
                 ["CMD-SHELL", "pg_isready -U postgres -d gtfsynq -h localhost"]
@@ -62,8 +62,8 @@ services:
             start_period: 20s
 
 volumes:
-    kafka-data:
-    timescaledb-data:
+    kafka-data-local:
+    timescaledb-data-local:
 
 networks:
     default:
