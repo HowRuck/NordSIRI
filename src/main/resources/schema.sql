@@ -21,7 +21,7 @@ CREATE TABLE trip_updates (
     start_date DATE,
     start_time TIME,
     start_time_overflow_days SMALLINT,
-    received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    feed_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (id)
 );
 
@@ -30,7 +30,7 @@ CREATE TABLE trip_updates (
 CREATE TABLE trip_update_stop_time_updates (
     trip_update_id BIGINT NOT NULL,
     feed_id feed_id_enum NOT NULL,
-    received_at TIMESTAMPTZ NOT NULL,
+    feed_ts TIMESTAMPTZ NOT NULL,
     stop_sequence INT NOT NULL,
     stop_id TEXT,
     arrival_time TIMESTAMPTZ,
@@ -41,15 +41,14 @@ CREATE TABLE trip_update_stop_time_updates (
     scheduled_departure_time TIMESTAMPTZ,
     schedule_relationship schedule_relationship_enum,
     assigned_stop_id TEXT,
-    hash BIGINT NOT NULL,
-    PRIMARY KEY (trip_update_id, received_at, stop_sequence)
+    PRIMARY KEY (trip_update_id, feed_ts, stop_sequence)
 );
 
 -- 5. Convert to Hypertable
 -- We use create_hypertable. Since we drop at start, migrate_data is unnecessary.
 SELECT create_hypertable(
     'trip_update_stop_time_updates',
-    'received_at',
+    'feed_ts',
     chunk_time_interval => INTERVAL '1 day',
     if_not_exists => TRUE
 );
@@ -57,5 +56,5 @@ SELECT create_hypertable(
 -- 6. Recreate Indices
 CREATE INDEX idx_trip_updates_feed_id ON trip_updates (feed_id);
 
-CREATE INDEX idx_stop_updates_feed_received
-    ON trip_update_stop_time_updates (feed_id, received_at DESC);
+CREATE INDEX idx_stop_updates_feed_ts
+    ON trip_update_stop_time_updates (feed_id, feed_ts DESC);

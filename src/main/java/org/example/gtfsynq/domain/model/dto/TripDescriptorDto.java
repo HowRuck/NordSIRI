@@ -17,8 +17,8 @@ public record TripDescriptorDto(
     String entityId,
     /** The feed ID of this trip descriptor */
     String feedId,
-    /** The timestamp when this trip descriptor was observed */
-    Instant observedAt,
+    /** The timestamp when this trip descriptor was received */
+    Instant feedTs,
     /** The trip ID of this trip descriptor */
     String tripId,
     /** The route ID of this trip descriptor */
@@ -41,7 +41,7 @@ public record TripDescriptorDto(
         TripDescriptor tripDescriptor,
         String feedId,
         String entityId,
-        Instant observedAt
+        Instant feedTs
     ) {
         if (tripDescriptor == null) return null;
 
@@ -86,7 +86,7 @@ public record TripDescriptorDto(
             tripKeyBytesHash,
             entityId,
             feedId,
-            observedAt,
+            feedTs,
             tripId,
             routeId,
             directionId,

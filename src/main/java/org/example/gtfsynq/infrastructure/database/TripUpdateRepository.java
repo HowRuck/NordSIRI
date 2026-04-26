@@ -6,8 +6,6 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.gtfsynq.domain.model.dto.TripDescriptorDto;
@@ -16,11 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 /**
- * High-throughput persistence for GTFS-RT TripUpdate entities.
- *
- * <p>This repository is designed for TimescaleDB-backed workloads:
- * the parent table is hypertable-friendly by using {@code received_at} as the time column,
- * while child tables remain normalized relational tables.
+ * High-throughput persistence for GTFS-RT TripUpdate entities
  */
 @Repository
 @RequiredArgsConstructor
@@ -40,8 +34,6 @@ public class TripUpdateRepository {
             return;
         }
 
-        var currentTime = Instant.now().truncatedTo(ChronoUnit.SECONDS);
-
         var sql = """
             INSERT INTO trip_updates (
                 entity_id,
@@ -52,7 +44,7 @@ public class TripUpdateRepository {
                 start_date,
                 start_time,
                 start_time_overflow_days,
-                received_at
+                feed_ts
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (id) DO UPDATE SET
                 entity_id = EXCLUDED.entity_id,
@@ -62,7 +54,7 @@ public class TripUpdateRepository {
                 start_date = EXCLUDED.start_date,
                 start_time = EXCLUDED.start_time,
                 start_time_overflow_days = EXCLUDED.start_time_overflow_days,
-                received_at = EXCLUDED.received_at
+                feed_ts = EXCLUDED.feed_ts
             """;
 
         jdbcTemplate.batchUpdate(
@@ -96,7 +88,10 @@ public class TripUpdateRepository {
                     descriptor.startTimeOverflowDays(),
                     Types.SMALLINT
                 );
-                preparedStatement.setTimestamp(9, Timestamp.from(currentTime));
+                preparedStatement.setTimestamp(
+                    9,
+                    Timestamp.from(descriptor.feedTs())
+                );
             }
         );
     }
@@ -115,7 +110,7 @@ public class TripUpdateRepository {
             INSERT INTO trip_update_stop_time_updates (
                 trip_update_id,
                 feed_id,
-                received_at,
+                feed_ts,
                 stop_sequence,
                 stop_id,
                 arrival_time,
@@ -125,10 +120,9 @@ public class TripUpdateRepository {
                 departure_delay,
                 scheduled_departure_time,
                 schedule_relationship,
-                assigned_stop_id,
-                hash
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (trip_update_id, received_at, stop_sequence) DO NOTHING
+                assigned_stop_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (trip_update_id, feed_ts, stop_sequence) DO NOTHING
             """;
 
         jdbcTemplate.batchUpdate(
@@ -140,7 +134,7 @@ public class TripUpdateRepository {
                 preparedStatement.setObject(2, update.feedId(), Types.OTHER);
                 preparedStatement.setTimestamp(
                     3,
-                    Timestamp.from(update.receivedAt())
+                    Timestamp.from(update.feedTs())
                 );
                 setNullableInteger(preparedStatement, 4, update.stopSequence());
                 preparedStatement.setString(5, update.stopId());
@@ -182,7 +176,6 @@ public class TripUpdateRepository {
                     Types.OTHER
                 );
                 preparedStatement.setString(13, update.assignedStopId());
-                preparedStatement.setLong(14, update.hash());
             }
         );
     }

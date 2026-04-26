@@ -17,7 +17,7 @@ public record TripStopTimeUpdateDto(
     /** The feed ID of this stop time update */
     @NonNull String feedId,
     /** The timestamp when this stop time update was received */
-    @NonNull Instant receivedAt,
+    @NonNull Instant feedTs,
     /** The stop sequence of this stop time update */
     @NonNull Integer stopSequence,
     /** The stop ID of this stop time update */
@@ -47,7 +47,7 @@ public record TripStopTimeUpdateDto(
     public static TripStopTimeUpdateDto fromProto(
         long tripId,
         String feedId,
-        Instant receivedAt,
+        Instant feedTs,
         StopTimeUpdate stu
     ) {
         var stopSequence = GtfsFeedFormatter.nullableInteger(
@@ -133,7 +133,7 @@ public record TripStopTimeUpdateDto(
         return new TripStopTimeUpdateDto(
             tripId,
             feedId,
-            receivedAt,
+            feedTs,
             stopSequence,
             stopId,
             arrivalTime,

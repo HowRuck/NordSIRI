@@ -19,13 +19,13 @@ public record TripUpdateDto(
      *
      * @param entity the feed entity
      * @param feedId the feed id
-     * @param observedAt the observed at timestamp
+     * @param feedTs the timestamp of the feed
      * @return the trip update dto, or null if the entity does not have a trip update
      */
     public static TripUpdateDto fromEntity(
         FeedEntity entity,
         String feedId,
-        Instant observedAt
+        Instant feedTs
     ) {
         if (!entity.hasTripUpdate()) return null;
 
@@ -36,7 +36,7 @@ public record TripUpdateDto(
             update.getTrip(),
             feedId,
             entity.getId(),
-            observedAt
+            feedTs
         );
 
         // Individually convert Stop Time Updates
@@ -50,7 +50,7 @@ public record TripUpdateDto(
                 TripStopTimeUpdateDto.fromProto(
                     tripDescriptor.id(),
                     feedId,
-                    observedAt,
+                    feedTs,
                     stu
                 )
             );
