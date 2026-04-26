@@ -1,4 +1,4 @@
-package org.example.gtfsynq.application.service;
+package org.example.gtfsynq.infrastructure.kafka;
 
 import com.google.transit.realtime.GtfsRealtime;
 import java.util.List;

@@ -1,4 +1,4 @@
-package org.example.gtfsynq.application.service;
+package org.example.gtfsynq.infrastructure.persistence.sinks;
 
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import java.time.Instant;

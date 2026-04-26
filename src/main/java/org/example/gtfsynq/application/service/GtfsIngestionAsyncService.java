@@ -2,6 +2,7 @@ package org.example.gtfsynq.application.service;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
+import org.example.gtfsynq.infrastructure.kafka.GtfsKafkaProducer;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
