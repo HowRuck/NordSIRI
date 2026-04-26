@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM docker.io/gradle:9.4.1-jdk26 AS builder
+FROM docker.io/eclipse-temurin:26-jdk-alpine AS builder
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ WORKDIR /app
 COPY . .
 
 # Build without using or saving any cache
-RUN gradle bootJar -x test --no-daemon --no-build-cache --no-configuration-cache
+RUN ./gradlew bootJar -x test --no-daemon --no-build-cache --no-configuration-cache
 
 # Stage 2: Runtime
 FROM docker.io/eclipse-temurin:26-jre-alpine
