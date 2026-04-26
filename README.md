@@ -41,8 +41,8 @@ It is built with **Gradle**, runs on **Java 26**, and is designed to work with *
 To run the project locally, you need:
 
 - **Java 26**
-- **Gradle 9.x or later**  
-  The project does not currently include a Gradle wrapper, so use a locally installed Gradle distribution.
+- **Gradle Wrapper**  
+  The repository includes a Gradle wrapper, so use `./gradlew` for all build and run commands.
 - **Docker** and **Docker Compose** if you want to run Kafka and TimescaleDB in containers
 
 ## Quick Start
@@ -54,7 +54,7 @@ To run the project locally, you need:
 
 ### 2. Build the application with Gradle
 
-    gradle clean bootJar
+    ./gradlew clean bootJar
 
 This creates the executable application JAR at:
 
@@ -64,7 +64,7 @@ This creates the executable application JAR at:
 
 If Kafka and TimescaleDB are available on your machine, start the app with:
 
-    gradle bootRun
+    ./gradlew bootRun
 
 The application listens on:
 
@@ -101,11 +101,11 @@ The app is exposed on:
 A typical local development setup looks like this:
 
 1. Start infrastructure services with Docker Compose.
-2. Run the app from Gradle using `bootRun`.
+2. Run the app with `./gradlew bootRun`.
 3. Make changes in `src/main/java`.
-4. Re-run `gradle test` and `gradle bootJar` as needed.
+4. Re-run `./gradlew test` and `./gradlew bootJar` as needed.
 
-If you want to run only the infrastructure containers and keep the app on your host machine, start Kafka and TimescaleDB separately using the same Compose file, then run the app locally with Gradle.
+If you want to run only the infrastructure containers and keep the app on your host machine, start Kafka and TimescaleDB separately using the same Compose file, then run the app locally with `./gradlew`.
 
 ## Project Structure
 
@@ -151,25 +151,25 @@ Migrations are applied automatically on startup when Flyway is enabled.
 
 ### Run tests
 
-    gradle test
+    ./gradlew test
 
 ### Build the application JAR
 
-    gradle bootJar
+    ./gradlew bootJar
 
 ### Clean and build from scratch
 
-    gradle clean build
+    ./gradlew clean build
 
 ### Run the app from Gradle
 
-    gradle bootRun
+    ./gradlew bootRun
 
 ## Docker Image Build
 
 The Docker image is built in two stages:
 
-1. Build the application with Gradle inside a Gradle/JDK 26 container.
+1. Build the application with the Gradle wrapper inside a Gradle/JDK 26 container.
 2. Copy the generated JAR into a lightweight Java 26 runtime image.
 
 This means the container image always reflects the current Gradle build output from `build/libs/app.jar`.
