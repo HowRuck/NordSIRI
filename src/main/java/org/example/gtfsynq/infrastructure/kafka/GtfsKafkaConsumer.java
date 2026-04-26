@@ -2,7 +2,6 @@ package org.example.gtfsynq.infrastructure.kafka;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
-import java.nio.ByteBuffer;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
