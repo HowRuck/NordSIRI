@@ -52,7 +52,7 @@ public class GtfsPollingService {
         }
     }
 
-    public List<GtfsNativeFilter.TypedEntity> pollStream(
+    public List<GtfsNativeFilter.BinaryFeedEntityWithMetadata> pollStream(
         String feedId,
         String feedUrl
     ) {
