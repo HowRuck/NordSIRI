@@ -67,9 +67,29 @@ public class GtfsNativeFilter {
          * Decodes a byte array back into a {@code BinaryFeedEntityWithMetadata} record
          */
         public static BinaryFeedEntityWithMetadata decode(byte[] data) {
-            var buffer = ByteBuffer.wrap(data);
+            if (data == null || data.length < 20) {
+                throw new IllegalArgumentException(
+                    "Data too short. Expected at least 20 bytes, got " +
+                        (data == null ? 0 : data.length)
+                );
+            }
 
+            var buffer = ByteBuffer.wrap(data);
             var payloadLength = buffer.getInt();
+
+            // Check remaining bytes: need payloadLength + 8 (type) + 8 (ts)
+            var remainingNeeded = payloadLength + Long.BYTES + Long.BYTES;
+            if (buffer.remaining() < remainingNeeded) {
+                throw new IllegalArgumentException(
+                    String.format(
+                        "Payload too short. Need %d more bytes, have %d. payloadLength=%d, totalSize=%d",
+                        remainingNeeded,
+                        buffer.remaining(),
+                        payloadLength,
+                        data.length
+                    )
+                );
+            }
 
             var bytes = new byte[payloadLength];
             if (payloadLength > 0) {
