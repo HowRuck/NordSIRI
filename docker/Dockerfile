@@ -1,5 +1,6 @@
 # Stage 1: Build
 FROM docker.io/eclipse-temurin:26-jdk-alpine AS builder
+RUN apk add --no-cache libc6-compat libstdc++
 
 WORKDIR /app
 
