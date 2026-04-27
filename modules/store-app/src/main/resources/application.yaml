@@ -1,0 +1,35 @@
+spring:
+    main:
+        web-application-type: none
+    threads:
+        virtual:
+            enabled: true
+    application:
+        name: GTFSynq-Store
+    datasource:
+        url: jdbc:postgresql://localhost:5432/gtfsynq
+        username: postgres
+        password: postgres
+    jpa:
+        hibernate:
+            ddl-auto: validate
+    flyway:
+        enabled: true
+        validate-on-migrate: true
+        baseline-on-migrate: true
+        locations: classpath:db/migration
+    kafka:
+        topic: gtfs-trip-updates
+        bootstrap-servers: localhost:9092
+        streams:
+            properties:
+                auto.create.topics: "true"
+
+state:
+    save:
+        path: state_dump.bin
+
+gtfs:
+    sink:
+        enabled: true
+        flush-interval-ms: 10000

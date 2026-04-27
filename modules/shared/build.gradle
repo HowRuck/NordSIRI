@@ -1,0 +1,23 @@
+plugins {
+    id 'java-library'
+    id 'com.google.protobuf'
+}
+
+dependencies {
+    api 'com.google.protobuf:protobuf-java:4.34.1'
+    api 'io.arxila.javatuples:javatuples:2.0.1'
+    api 'net.openhft:zero-allocation-hashing:2026.0'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    compileOnly 'org.jspecify:jspecify:1.0.0'
+    compileOnly 'org.springframework:spring-context'
+    compileOnly 'org.slf4j:slf4j-api'
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:4.34.1'
+    }
+}

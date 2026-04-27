@@ -1,0 +1,21 @@
+package org.example.gtfsynq.ingest.config;
+
+import java.util.List;
+import java.util.Map;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties(prefix = "gtfs")
+public class GtfsConfig {
+
+    private Map<String, List<String>> feeds;
+
+    public Map<String, List<String>> getFeeds() {
+        return feeds;
+    }
+
+    public void setFeeds(Map<String, List<String>> feeds) {
+        this.feeds = feeds;
+    }
+}

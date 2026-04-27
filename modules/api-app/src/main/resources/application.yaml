@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: GTFSynq-API
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gtfsynq
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+server:
+  port: 8888
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always

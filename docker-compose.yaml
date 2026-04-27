@@ -1,4 +1,98 @@
 services:
+    api-app:
+        build:
+            context: .
+            dockerfile: docker/api-app/Dockerfile
+        container_name: gtfsynq-api-app
+        depends_on:
+            kafka:
+                condition: service_healthy
+            timescaledb:
+                condition: service_healthy
+        environment:
+            SPRING_DATASOURCE_URL: jdbc:postgresql://timescaledb:5432/gtfsynq
+            SPRING_DATASOURCE_USERNAME: postgres
+            SPRING_DATASOURCE_PASSWORD: postgres
+            SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+            SERVER_PORT: 8080
+        ports:
+            - "8080:8080"
+        volumes:
+            - gtfsynq-api-data:/app/data
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "wget --spider -q http://localhost:8080/actuator/health || exit 1",
+                ]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+
+    ingest-app:
+        build:
+            context: .
+            dockerfile: docker/ingest-app/Dockerfile
+        container_name: gtfsynq-ingest-app
+        depends_on:
+            kafka:
+                condition: service_healthy
+            timescaledb:
+                condition: service_healthy
+        environment:
+            SPRING_DATASOURCE_URL: jdbc:postgresql://timescaledb:5432/gtfsynq
+            SPRING_DATASOURCE_USERNAME: postgres
+            SPRING_DATASOURCE_PASSWORD: postgres
+            SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+            SERVER_PORT: 8081
+            STATE_SAVE_PATH: /app/data/state_dump.bin
+        ports:
+            - "8081:8081"
+        volumes:
+            - gtfsynq-ingest-data:/app/data
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "wget --spider -q http://localhost:8081/actuator/health || exit 1",
+                ]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+
+    store-app:
+        build:
+            context: .
+            dockerfile: docker/store-app/Dockerfile
+        container_name: gtfsynq-store-app
+        depends_on:
+            kafka:
+                condition: service_healthy
+            timescaledb:
+                condition: service_healthy
+        environment:
+            SPRING_DATASOURCE_URL: jdbc:postgresql://timescaledb:5432/gtfsynq
+            SPRING_DATASOURCE_USERNAME: postgres
+            SPRING_DATASOURCE_PASSWORD: postgres
+            SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+            SERVER_PORT: 8082
+        ports:
+            - "8082:8082"
+        volumes:
+            - gtfsynq-store-data:/app/data
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "wget --spider -q http://localhost:8082/actuator/health || exit 1",
+                ]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+
     kafka:
         image: docker.io/confluentinc/cp-kafka:7.7.8
         container_name: kafka
@@ -10,7 +104,7 @@ services:
             KAFKA_PROCESS_ROLES: broker,controller
 
             KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
             KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
 
@@ -33,7 +127,7 @@ services:
             CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
 
         volumes:
-            - kafka-data-local:/var/lib/kafka/data
+            - kafka-data:/var/lib/kafka/data
 
         healthcheck:
             test: ["CMD-SHELL", "cub kafka-ready -b localhost:9092 1 20"]
@@ -52,7 +146,7 @@ services:
             POSTGRES_PASSWORD: postgres
             POSTGRES_DB: gtfsynq
         volumes:
-            - timescaledb-data-local:/var/lib/postgresql/data
+            - timescaledb-data:/var/lib/postgresql/data
         healthcheck:
             test:
                 ["CMD-SHELL", "pg_isready -U postgres -d gtfsynq -h localhost"]
@@ -62,8 +156,11 @@ services:
             start_period: 20s
 
 volumes:
-    kafka-data-local:
-    timescaledb-data-local:
+    kafka-data:
+    timescaledb-data:
+    gtfsynq-api-data:
+    gtfsynq-ingest-data:
+    gtfsynq-store-data:
 
 networks:
     default:

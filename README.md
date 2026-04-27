@@ -1,28 +1,29 @@
 <div align="center">
-   <h1>GTFSynq</h1>
+  <h1>GTFSynq</h1>
 
-   <img alt="Spring" src="https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white" />
-   <img alt="Java" src="https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white" />
-   <img alt="Gradle" src="https://img.shields.io/badge/gradle-02303A.svg?style=for-the-badge&logo=gradle&logoColor=white" />
-   <img alt="TimescaleDB" src="https://img.shields.io/badge/timescaledb-36764?style=for-the-badge&logo=Timescale&logoColor=black&color=%23E6EE8A" />
-   <img alt="Apache Kafka" src="https://img.shields.io/badge/Apache%20Kafka-000?style=for-the-badge&logo=apachekafka" />
-   <img alt="Zed" src="https://img.shields.io/badge/zed-084CCF.svg?style=for-the-badge&logo=zedindustries&logoColor=white" />
+  <img alt="Spring" src="https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white" />
+  <img alt="Java" src="https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white" />
+  <img alt="Gradle" src="https://img.shields.io/badge/gradle-02303A.svg?style=for-the-badge&logo=gradle&logoColor=white" />
+  <img alt="TimescaleDB" src="https://img.shields.io/badge/timescaledb-36764?style=for-the-badge&logo=Timescale&logoColor=black&color=%23E6EE8A" />
+  <img alt="Apache Kafka" src="https://img.shields.io/badge/Apache%20Kafka-000?style=for-the-badge&logo=apachekafka" />
+  <img alt="Zed" src="https://img.shields.io/badge/zed-084CCF.svg?style=for-the-badge&logo=zedindustries&logoColor=white" />
 </div>
 
-</br>
+<br />
 
-GTFSynq is a modern Spring Boot application for ingesting, processing, storing, and analyzing **GTFS-RT (General Transit Feed Specification - Real-Time)** feeds
+GTFSynq is a modern Spring Boot transit data platform for ingesting, processing, storing, and analyzing **GTFS-RT (General Transit Feed Specification - Real-Time)** feeds and **GTFS CSV** static feed data
 
 It is built with **Gradle**, runs on **Java 26**, and is designed to work with **Kafka** and **TimescaleDB** for real-time transit data processing and time-series storage
 
 ## Features
 
-- **Real-time processing**: ingest and process GTFS-RT feeds with low latency.
-- **Time-series storage**: store transit data efficiently in TimescaleDB.
-- **Kafka integration**: stream GTFS-RT payloads through Apache Kafka.
-- **Protobuf support**: encode and decode GTFS-RT messages efficiently.
-- **Observability**: Spring Boot Actuator with Prometheus metrics.
-- **Docker-based runtime**: run the full stack with a single Compose command.
+- **Real-time processing**: ingest and process GTFS-RT feeds with low latency
+- **Static feed support**: model GTFS CSV data alongside realtime transit updates
+- **Time-series storage**: store transit data efficiently in TimescaleDB
+- **Kafka integration**: stream transit payloads through Apache Kafka
+- **Protobuf support**: encode and decode GTFS-RT messages efficiently
+- **Observability**: Spring Boot Actuator with Prometheus metrics
+- **Docker-based runtime**: run the full stack with a single Compose command
 
 ## Tech Stack
 
@@ -43,28 +44,36 @@ To run the project locally, you need:
 - **Java 26**
 - **Gradle Wrapper**  
   The repository includes a Gradle wrapper, so use `./gradlew` for all build and run commands.
-- **Docker** and **Docker Compose** if you want to run Kafka and TimescaleDB in containers
+- **Docker** and **Docker Compose** if you want to run Kafka and TimescaleDB in containers.
 
 ## Quick Start
 
 ### 1. Clone the repository
 
-    git clone https://github.com/evogel/GTFSynq.git
-    cd GTFSynq
+```bash
+git clone https://github.com/evogel/GTFSynq.git
+cd GTFSynq
+```
 
 ### 2. Build the application with Gradle
 
-    ./gradlew clean bootJar
+```bash
+./gradlew clean bootJar
+```
 
 This creates the executable application JAR at:
 
-    build/libs/app.jar
+```bash
+build/libs/app.jar
+```
 
 ### 3. Run the application locally
 
 If Kafka and TimescaleDB are available on your machine, start the app with:
 
-    ./gradlew bootRun
+```bash
+./gradlew bootRun
+```
 
 The application listens on:
 
@@ -82,19 +91,27 @@ The repository includes a Docker Compose setup that starts:
 
 To build and start everything:
 
-    docker compose -f docker/docker-compose.yaml up -d --build
+```bash
+docker compose -f docker/docker-compose.yaml up -d --build
+```
 
 The app is exposed on:
 
-    http://localhost:8888
+```bash
+http://localhost:8888
+```
 
 ### Stopping the stack
 
-    docker compose -f docker/docker-compose.yaml down
+```bash
+docker compose -f docker/docker-compose.yaml down
+```
 
 ### Viewing logs
 
-    docker compose -f docker/docker-compose.yaml logs -f app
+```bash
+docker compose -f docker/docker-compose.yaml logs -f app
+```
 
 ## Local Development Flow
 
@@ -109,22 +126,83 @@ If you want to run only the infrastructure containers and keep the app on your h
 
 ## Project Structure
 
-    GTFSynq/
-    ├── build.gradle
-    ├── settings.gradle
-    ├── docker/
-    │   ├── Dockerfile
-    │   ├── docker-compose.yaml
-    │   └── entrypoint.sh
-    ├── src/
-    │   ├── main/
-    │   │   ├── java/
-    │   │   ├── proto/
-    │   │   └── resources/
-    │   │       ├── application.yaml
-    │   │       └── db/migration/
-    │   └── test/
-    └── README.md
+```text
+GTFSynq/
+├── build.gradle
+├── settings.gradle
+├── docker/
+│   ├── Dockerfile
+│   ├── docker-compose.yaml
+│   └── entrypoint.sh
+├── modules/
+│   ├── shared/
+│   ├── ingest-app/
+│   ├── store-app/
+│   └── api-app/
+├── docs/
+│   └── architecture.md
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   ├── proto/
+│   │   └── resources/
+│   │       ├── application.yaml
+│   │       └── db/migration/
+│   └── test/
+└── README.md
+```
+
+## Modules
+
+### `modules/shared`
+Contains code reused by multiple apps:
+
+- GTFS domain models and DTOs
+- protobuf-generated types
+- message envelope encoding/decoding
+- hashing utilities
+- off-heap state store utilities
+- GTFS formatting helpers
+
+### `modules/ingest-app`
+Responsible for getting data into Kafka:
+
+- scheduled GTFS-RT polling
+- native GTFS-RT parsing
+- Kafka publishing
+- feed/source configuration
+
+### `modules/store-app`
+Responsible for getting data out of Kafka and into PostgreSQL/TimescaleDB:
+
+- Kafka Streams consumer
+- deduplication
+- batch persistence
+- Flyway migrations
+- JDBC-based repository writes
+
+### `modules/api-app`
+Reserved for the REST API layer:
+
+- Spring Boot application entry point
+- PostgreSQL-backed read access
+- HTTP endpoints and query models
+
+## Runtime Flow
+
+```text
+GTFS-RT / GTFS CSV sources
+        ↓
+   ingest-app
+        ↓
+      Kafka
+        ↓
+    store-app
+        ↓
+ PostgreSQL / TimescaleDB
+        ↓
+      api-app
+```
 
 ## Configuration
 
@@ -143,7 +221,9 @@ When running through Docker Compose, these values are overridden with container 
 
 Database schema migrations are managed with Flyway and are located in:
 
-    src/main/resources/db/migration
+```text
+src/main/resources/db/migration
+```
 
 Migrations are applied automatically on startup when Flyway is enabled.
 
@@ -151,19 +231,27 @@ Migrations are applied automatically on startup when Flyway is enabled.
 
 ### Run tests
 
-    ./gradlew test
+```bash
+./gradlew test
+```
 
 ### Build the application JAR
 
-    ./gradlew bootJar
+```bash
+./gradlew bootJar
+```
 
 ### Clean and build from scratch
 
-    ./gradlew clean build
+```bash
+./gradlew clean build
+```
 
 ### Run the app from Gradle
 
-    ./gradlew bootRun
+```bash
+./gradlew bootRun
+```
 
 ## Docker Image Build
 
