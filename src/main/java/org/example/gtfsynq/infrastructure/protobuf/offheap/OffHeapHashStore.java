@@ -1,15 +1,17 @@
 package org.example.gtfsynq.infrastructure.protobuf.offheap;
 
 import java.util.concurrent.locks.StampedLock;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class OffHeapHashStore implements AutoCloseable {
 
-    private final OffHeapLongTable binTable = new OffHeapLongTable();
+    private final OffHeapLongTable binTable;
 
     private final StampedLock lock = new StampedLock();
 
@@ -21,11 +23,8 @@ public class OffHeapHashStore implements AutoCloseable {
     };
 
     private static final int TTL_MINUTES = 60;
-    public volatile int currentMinute;
-
-    public OffHeapHashStore() {
-        currentMinute = (int) (System.currentTimeMillis() / 60000);
-    }
+    public volatile int currentMinute = (int) (System.currentTimeMillis() /
+        60000);
 
     public long get(long key) {
         return getAndTryOptimistic(key)[0];

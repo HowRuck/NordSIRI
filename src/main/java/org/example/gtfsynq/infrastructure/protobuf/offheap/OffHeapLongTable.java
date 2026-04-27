@@ -3,6 +3,12 @@ package org.example.gtfsynq.infrastructure.protobuf.offheap;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import org.example.gtfsynq.infrastructure.persistence.OffHeapFileScribe;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 /**
  * Shared off-heap memory helper for a packed {@code long -> long -> long} table row layout.
@@ -10,10 +16,13 @@ import java.lang.foreign.ValueLayout;
  * <p>This class centralizes the low-level foreign-memory setup so the hash store can focus on
  * behavior rather than repeated layout and access boilerplate.
  */
+@Component
 public final class OffHeapLongTable implements AutoCloseable {
 
-    public static final int CAPACITY = 8_388_608;
+    public static final int CAPACITY = 4_194_304;
     public static final int CAPACITY_MASK = CAPACITY - 1;
+
+    private final OffHeapFileScribe scribe;
 
     /**
      * Row size in bytes.
@@ -50,9 +59,13 @@ public final class OffHeapLongTable implements AutoCloseable {
     private final Arena arena;
     private final MemorySegment segment;
 
-    public OffHeapLongTable() {
+    @Autowired
+    public OffHeapLongTable(OffHeapFileScribe scribe) {
         arena = Arena.ofShared();
         segment = this.arena.allocate((long) CAPACITY * SLOT_SIZE, 64);
+        this.scribe = scribe;
+
+        scribe.load(this);
     }
 
     public long getKey(long index) {
@@ -144,5 +157,23 @@ public final class OffHeapLongTable implements AutoCloseable {
     @Override
     public void close() {
         arena.close();
+    }
+
+    public MemorySegment getSegment() {
+        return segment;
+    }
+
+    public long byteSize() {
+        return segment.byteSize();
+    }
+
+    @EventListener(ContextRefreshedEvent.class)
+    public void onStartup() {
+        scribe.load(this);
+    }
+
+    @Scheduled(fixedRate = 60_000)
+    public void backup() {
+        scribe.dump(this);
     }
 }
