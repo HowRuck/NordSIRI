@@ -11,19 +11,21 @@
 
 <br />
 
+> **🎓 Educational Project**: GTFSynq is an educational project to explore modern Java, Spring Boot, time-series databases, and real-time data processing. It's functional, but not all features are implemented yet, and the code may not always follow production-grade patterns or performance optimizations.
+
 GTFSynq is a modern Spring Boot transit data platform for ingesting, processing, storing, and analyzing **GTFS-RT (General Transit Feed Specification - Real-Time)** feeds and **GTFS CSV** static feed data
 
 It is built with **Gradle**, runs on **Java 26**, and is designed to work with **Kafka** and **TimescaleDB** for real-time transit data processing and time-series storage
 
 ## Features
 
-- **Real-time processing**: ingest and process GTFS-RT feeds with low latency
-- **Static feed support**: model GTFS CSV data alongside realtime transit updates
-- **Time-series storage**: store transit data efficiently in TimescaleDB
-- **Kafka integration**: stream transit payloads through Apache Kafka
-- **Protobuf support**: encode and decode GTFS-RT messages efficiently
+- **Real-time processing**: Ingest and process GTFS-RT feeds with low latency
+- **Static feed support**: Model GTFS CSV data alongside realtime transit updates
+- **Time-series storage**: Store transit data efficiently in TimescaleDB
+- **Kafka integration**: Stream transit payloads through Apache Kafka
+- **Protobuf support**: Encode and decode GTFS-RT messages efficiently
 - **Observability**: Spring Boot Actuator with Prometheus metrics
-- **Docker-based runtime**: run the full stack with a single Compose command
+- **Docker-based runtime**: Run the full stack with a single Compose command
 
 ## Tech Stack
 
