@@ -36,4 +36,4 @@ gtfsynq:
 
 state:
     save:
-        path: state_dump.bin
+        path: data/state_dump.bin

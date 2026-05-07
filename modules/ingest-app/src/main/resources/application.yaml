@@ -119,3 +119,7 @@ management:
     endpoint:
         health:
             show-details: ALWAYS
+
+state:
+    save:
+        path: data/state_dump.bin
