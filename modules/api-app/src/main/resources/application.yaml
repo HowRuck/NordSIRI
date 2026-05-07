@@ -1,23 +1,23 @@
 spring:
-  application:
-    name: GTFSynq-API
-  datasource:
-    url: jdbc:postgresql://localhost:5432/gtfsynq
-    username: postgres
-    password: postgres
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    open-in-view: false
+    application:
+        name: GTFSynq-API
+    datasource:
+        url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/gtfsynq}
+        username: ${SPRING_DATASOURCE_USERNAME:postgres}
+        password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    jpa:
+        hibernate:
+            ddl-auto: validate
+        open-in-view: false
 
 server:
-  port: 8888
+    port: ${SERVER_PORT:8080}
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus
-  endpoint:
-    health:
-      show-details: always
+    endpoints:
+        web:
+            exposure:
+                include: health,info,prometheus
+    endpoint:
+        health:
+            show-details: always

@@ -7,9 +7,9 @@ spring:
     application:
         name: GTFSynq-Store
     datasource:
-        url: jdbc:postgresql://localhost:5432/gtfsynq
-        username: postgres
-        password: postgres
+        url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/gtfsynq}
+        username: ${SPRING_DATASOURCE_USERNAME:postgres}
+        password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     jpa:
         hibernate:
             ddl-auto: validate
@@ -20,7 +20,7 @@ spring:
         locations: classpath:db/migration
     kafka:
         topic: gtfs-trip-updates
-        bootstrap-servers: localhost:9092
+        bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
         streams:
             properties:
                 auto.create.topics: "true"
