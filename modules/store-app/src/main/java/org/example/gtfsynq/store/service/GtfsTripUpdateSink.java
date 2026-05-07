@@ -37,7 +37,7 @@ public class GtfsTripUpdateSink {
     private final DatabaseDeduplicationService deduplicationService;
     private final GtfsSinkMetrics metrics;
 
-    @Value("${gtfs.sink.enabled:true}")
+    @Value("${gtfsynq.sink.enabled:true}")
     private boolean enabled;
 
     /**
@@ -80,7 +80,7 @@ public class GtfsTripUpdateSink {
     /**
      * Flushes the current buffer on a schedule.
      */
-    @Scheduled(fixedDelayString = "${gtfs.sink.flush-interval-ms:10000}")
+    @Scheduled(fixedDelayString = "${gtfsynq.sink.flush-interval-ms:10000}")
     public void scheduledFlush() {
         if (!enabled) {
             return;

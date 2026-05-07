@@ -26,6 +26,10 @@ spring:
                 auto.create.topics: "true"
 
 gtfsynq:
+    sink:
+        enabled: true
+        flush-interval-ms: 10000
+
     retention:
         hours: 1h
         rate-minutes: 15
@@ -33,8 +37,3 @@ gtfsynq:
 state:
     save:
         path: state_dump.bin
-
-gtfs:
-    sink:
-        enabled: true
-        flush-interval-ms: 10000
