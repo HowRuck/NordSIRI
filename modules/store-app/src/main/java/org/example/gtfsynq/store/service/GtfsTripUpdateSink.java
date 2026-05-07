@@ -1,6 +1,5 @@
 package org.example.gtfsynq.store.service;
 
-import io.micrometer.core.annotation.Timed;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;

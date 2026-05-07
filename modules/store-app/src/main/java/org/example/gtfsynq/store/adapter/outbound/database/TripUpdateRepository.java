@@ -1,6 +1,5 @@
 package org.example.gtfsynq.store.adapter.outbound.database;
 
-import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
