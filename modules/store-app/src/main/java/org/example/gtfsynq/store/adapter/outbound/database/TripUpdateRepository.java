@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.gtfsynq.shared.model.dto.TripDescriptorDto;
@@ -94,6 +95,19 @@ public class TripUpdateRepository {
                 );
             }
         );
+
+        upsertHotTripRows(
+            descriptors
+                .stream()
+                .map(descriptor ->
+                    new HotTripUpdateRow(
+                        descriptor.id(),
+                        descriptor.feedId(),
+                        descriptor.feedTs()
+                    )
+                )
+                .toList()
+        );
     }
 
     /**
@@ -178,6 +192,22 @@ public class TripUpdateRepository {
                 preparedStatement.setString(13, update.assignedStopId());
             }
         );
+
+        upsertHotTripRows(
+            updates
+                .stream()
+                .map(update ->
+                    new HotTripUpdateRow(
+                        update.tripKey(),
+                        update.feedId(),
+                        update.feedTs()
+                    )
+                )
+                .distinct()
+                .toList()
+        );
+
+        upsertHotStopTimeUpdates(updates);
     }
 
     /**
@@ -188,6 +218,126 @@ public class TripUpdateRepository {
      * @param value the integer value to set, or null for a null value
      * @throws SQLException if a database access error occurs
      */
+    private void upsertHotTripRows(List<HotTripUpdateRow> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+
+        var sql = """
+            INSERT INTO rt_trip_updates_hot (
+                trip_update_id,
+                feed_id,
+                feed_ts
+            ) VALUES (?, ?, ?)
+            ON CONFLICT (trip_update_id) DO UPDATE SET
+                feed_id = EXCLUDED.feed_id,
+                feed_ts = EXCLUDED.feed_ts,
+                last_seen_at = NOW()
+            """;
+
+        jdbcTemplate.batchUpdate(
+            sql,
+            rows,
+            BATCH_SIZE,
+            (preparedStatement, row) -> {
+                preparedStatement.setLong(1, row.tripUpdateId());
+                preparedStatement.setObject(2, row.feedId(), Types.OTHER);
+                preparedStatement.setTimestamp(3, Timestamp.from(row.feedTs()));
+            }
+        );
+    }
+
+    private void upsertHotStopTimeUpdates(List<TripStopTimeUpdateDto> updates) {
+        if (updates == null || updates.isEmpty()) {
+            return;
+        }
+
+        var sql = """
+            INSERT INTO rt_stop_time_updates_hot (
+                trip_update_id,
+                feed_id,
+                feed_ts,
+                stop_sequence,
+                stop_id,
+                arrival_time,
+                arrival_delay,
+                scheduled_arrival_time,
+                departure_time,
+                departure_delay,
+                scheduled_departure_time,
+                schedule_relationship,
+                assigned_stop_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (trip_update_id, stop_sequence) DO UPDATE SET
+                feed_id = EXCLUDED.feed_id,
+                feed_ts = EXCLUDED.feed_ts,
+                stop_id = EXCLUDED.stop_id,
+                arrival_time = EXCLUDED.arrival_time,
+                arrival_delay = EXCLUDED.arrival_delay,
+                scheduled_arrival_time = EXCLUDED.scheduled_arrival_time,
+                departure_time = EXCLUDED.departure_time,
+                departure_delay = EXCLUDED.departure_delay,
+                scheduled_departure_time = EXCLUDED.scheduled_departure_time,
+                schedule_relationship = EXCLUDED.schedule_relationship,
+                assigned_stop_id = EXCLUDED.assigned_stop_id,
+                last_seen_at = NOW()
+            """;
+
+        jdbcTemplate.batchUpdate(
+            sql,
+            updates,
+            BATCH_SIZE,
+            (preparedStatement, update) -> {
+                preparedStatement.setLong(1, update.tripKey());
+                preparedStatement.setObject(2, update.feedId(), Types.OTHER);
+                preparedStatement.setTimestamp(
+                    3,
+                    Timestamp.from(update.feedTs())
+                );
+                setNullableInteger(preparedStatement, 4, update.stopSequence());
+                preparedStatement.setString(5, update.stopId());
+                preparedStatement.setTimestamp(
+                    6,
+                    update.arrivalTime() == null
+                        ? null
+                        : Timestamp.from(update.arrivalTime())
+                );
+                setNullableInteger(preparedStatement, 7, update.arrivalDelay());
+                preparedStatement.setTimestamp(
+                    8,
+                    update.scheduledArrivalTime() == null
+                        ? null
+                        : Timestamp.from(update.scheduledArrivalTime())
+                );
+                preparedStatement.setTimestamp(
+                    9,
+                    update.departureTime() == null
+                        ? null
+                        : Timestamp.from(update.departureTime())
+                );
+                setNullableInteger(
+                    preparedStatement,
+                    10,
+                    update.departureDelay()
+                );
+                preparedStatement.setTimestamp(
+                    11,
+                    update.scheduledDepartureTime() == null
+                        ? null
+                        : Timestamp.from(update.scheduledDepartureTime())
+                );
+                preparedStatement.setObject(
+                    12,
+                    update.scheduleRelationship() == null
+                        ? null
+                        : update.scheduleRelationship(),
+                    Types.OTHER
+                );
+                preparedStatement.setString(13, update.assignedStopId());
+            }
+        );
+    }
+
     private void setNullableInteger(
         PreparedStatement ps,
         int index,
@@ -199,4 +349,10 @@ public class TripUpdateRepository {
             ps.setInt(index, value);
         }
     }
+
+    private record HotTripUpdateRow(
+        long tripUpdateId,
+        String feedId,
+        Instant feedTs
+    ) {}
 }
