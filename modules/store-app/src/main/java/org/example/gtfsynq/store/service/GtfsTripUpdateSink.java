@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.gtfsynq.shared.model.FeedEntityWithMetadata;
 import org.example.gtfsynq.shared.model.dto.TripUpdateDto;
 import org.example.gtfsynq.store.adapter.outbound.database.TripUpdateRepository;
+import org.example.gtfsynq.store.service.metrics.GtfsSinkMetrics;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ public class GtfsTripUpdateSink {
     private final List<TripUpdateDto> buffer = new LinkedList<>();
 
     private final DatabaseDeduplicationService deduplicationService;
+    private final GtfsSinkMetrics metrics;
 
     @Value("${gtfs.sink.enabled:true}")
     private boolean enabled;
@@ -117,6 +119,8 @@ public class GtfsTripUpdateSink {
             return;
         }
 
+        var methodStart = System.nanoTime();
+
         var flushSize = buffer.size();
 
         var tripDescriptors = buffer
@@ -133,12 +137,23 @@ public class GtfsTripUpdateSink {
             .filter(u -> u.stopSequence() != null)
             .toList();
 
-        tripUpdateRepository.upsertTripDescriptors(tripDescriptors);
-        tripUpdateRepository.appendTripUpdates(stopTimeUpdates);
+        metrics.recordEntities(tripDescriptors.size(), stopTimeUpdates.size());
 
+        var start = System.nanoTime();
+        tripUpdateRepository.upsertTripDescriptors(tripDescriptors);
+        metrics.recordDescriptors(System.nanoTime() - start);
+
+        start = System.nanoTime();
+        tripUpdateRepository.appendTripUpdates(stopTimeUpdates);
+        metrics.recordStopTimes(System.nanoTime() - start);
+
+        start = System.nanoTime();
         tripUpdateRepository.upsertHotTrips(tripDescriptors, stopTimeUpdates);
+        metrics.recordHotTrips(System.nanoTime() - start);
 
         buffer.clear();
+
+        metrics.recordTotal(System.nanoTime() - methodStart);
 
         log.info(
             "Flushed {} buffered TripUpdate records ({} descriptors, {} stop-time updates)",
