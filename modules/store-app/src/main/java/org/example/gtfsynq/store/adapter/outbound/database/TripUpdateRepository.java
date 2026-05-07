@@ -215,16 +215,13 @@ public class TripUpdateRepository {
         upsertHotStopTimeUpdates(stopTimeUpdates);
     }
 
-    public int deleteAllByUpdatedAtBefore(LocalDateTime updatedAt) {
-        var sql = String.format(
-            """
+    public int deleteAllByLastSeenAtBefore(LocalDateTime lastSeenAt) {
+        var sql = """
             DELETE FROM rt_trip_updates_hot
-            WHERE updated_at < ?
-            """,
-            updatedAt
-        );
+            WHERE last_seen_at < ?
+            """;
 
-        var rowsAffected = jdbcTemplate.update(sql, updatedAt);
+        var rowsAffected = jdbcTemplate.update(sql, lastSeenAt);
 
         return rowsAffected;
     }

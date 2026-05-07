@@ -24,7 +24,7 @@ public class DatabaseMaintenanceService {
     public void cleanHotData() {
         log.info("Cleaning hot data...");
 
-        var deletedCount = tripUpdateRepository.deleteAllByUpdatedAtBefore(
+        var deletedCount = tripUpdateRepository.deleteAllByLastSeenAtBefore(
             LocalDateTime.now().minus(hotDataRetentionConfig.hours())
         );
 
