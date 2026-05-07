@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConfigurationProperties(prefix = "gtfsynq.retention")
 public record HotDataRententionConfig(
     @DefaultValue("1h") Duration hours,
