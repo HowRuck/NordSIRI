@@ -25,6 +25,11 @@ spring:
             properties:
                 auto.create.topics: "true"
 
+gtfsynq:
+    retention:
+        hours: 1h
+        rate-minutes: 15
+
 state:
     save:
         path: state_dump.bin

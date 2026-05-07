@@ -5,6 +5,7 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration;
@@ -14,6 +15,7 @@ import org.springframework.kafka.config.KafkaStreamsConfiguration;
  * Configuration class for setting up Kafka Streams for GTFS data processing.
  */
 @Configuration
+@EnableConfigurationProperties(HotDataRetentionConfig.class)
 public class GtfsKafkaStreamsConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")

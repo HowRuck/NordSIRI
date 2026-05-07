@@ -18,14 +18,14 @@ public class DatabaseMaintenanceService {
     private final HotDataRetentionConfig hotDataRetentionConfig;
 
     @Scheduled(
-        fixedDelayString = "#{@hotDataRetentionConfig.getRateMinutes()}",
+        fixedDelayString = "${gtfsynq.retention.rate-minutes:15}",
         timeUnit = TimeUnit.MINUTES
     )
     public void cleanHotData() {
         log.info("Cleaning hot data...");
 
         var deletedCount = tripUpdateRepository.deleteAllByUpdatedAtBefore(
-            LocalDateTime.now().minus(hotDataRetentionConfig.getHours())
+            LocalDateTime.now().minus(hotDataRetentionConfig.hours())
         );
 
         log.info("Deleted {} hot data records.", deletedCount);
