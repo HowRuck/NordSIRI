@@ -1,5 +1,6 @@
 package org.example.gtfsynq.store.adapter.outbound.database;
 
+import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -8,6 +9,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.LinkedList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -98,19 +100,6 @@ public class TripUpdateRepository {
                 );
             }
         );
-
-        upsertHotTripRows(
-            descriptors
-                .stream()
-                .map(descriptor ->
-                    new HotTripUpdateRow(
-                        descriptor.id(),
-                        descriptor.feedId(),
-                        descriptor.feedTs()
-                    )
-                )
-                .toList()
-        );
     }
 
     /**
@@ -195,22 +184,36 @@ public class TripUpdateRepository {
                 preparedStatement.setString(13, update.assignedStopId());
             }
         );
+    }
 
-        upsertHotTripRows(
-            updates
-                .stream()
-                .map(update ->
-                    new HotTripUpdateRow(
-                        update.tripKey(),
-                        update.feedId(),
-                        update.feedTs()
-                    )
+    public void upsertHotTrips(
+        List<TripDescriptorDto> tripDescriptors,
+        List<TripStopTimeUpdateDto> stopTimeUpdates
+    ) {
+        var rows = new LinkedList<HotTripUpdateRow>();
+
+        for (var tripDescriptor : tripDescriptors) {
+            rows.add(
+                new HotTripUpdateRow(
+                    tripDescriptor.id(),
+                    tripDescriptor.feedId(),
+                    tripDescriptor.feedTs()
                 )
-                .distinct()
-                .toList()
-        );
+            );
+        }
+        for (var update : stopTimeUpdates) {
+            rows.add(
+                new HotTripUpdateRow(
+                    update.tripKey(),
+                    update.feedId(),
+                    update.feedTs()
+                )
+            );
+        }
 
-        upsertHotStopTimeUpdates(updates);
+        upsertHotTripRows(rows);
+
+        upsertHotStopTimeUpdates(stopTimeUpdates);
     }
 
     public int deleteAllByUpdatedAtBefore(LocalDateTime updatedAt) {
@@ -240,6 +243,8 @@ public class TripUpdateRepository {
             return;
         }
 
+        var uniqueUpdateRows = rows.stream().distinct().toList();
+
         var sql = """
             INSERT INTO rt_trip_updates_hot (
                 trip_update_id,
@@ -254,7 +259,7 @@ public class TripUpdateRepository {
 
         jdbcTemplate.batchUpdate(
             sql,
-            rows,
+            uniqueUpdateRows,
             BATCH_SIZE,
             (preparedStatement, row) -> {
                 preparedStatement.setLong(1, row.tripUpdateId());
