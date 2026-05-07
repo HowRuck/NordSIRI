@@ -4,9 +4,8 @@ import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.example.gtfsynq.store.adapter.outbound.database.TripUpdateRepository;
-import org.example.gtfsynq.store.config.HotDataRententionConfig;
+import org.example.gtfsynq.store.config.HotDataRetentionConfig;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -16,19 +15,19 @@ import org.springframework.stereotype.Service;
 public class DatabaseMaintenanceService {
 
     private final TripUpdateRepository tripUpdateRepository;
-    private final HotDataRententionConfig hotDataRententionConfig;
+    private final HotDataRetentionConfig hotDataRetentionConfig;
 
     @Scheduled(
-        fixedDelayString = "#{@hotDataRententionConfig.rateMinutes()}",
+        fixedDelayString = "#{@hotDataRetentionConfig.getRateMinutes()}",
         timeUnit = TimeUnit.MINUTES
     )
     public void cleanHotData() {
         log.info("Cleaning hot data...");
 
         var deletedCount = tripUpdateRepository.deleteAllByUpdatedAtBefore(
-            LocalDateTime.now().minus(hotDataRententionConfig.hours())
+            LocalDateTime.now().minus(hotDataRetentionConfig.getHours())
         );
-        
+
         log.info("Deleted {} hot data records.", deletedCount);
     }
 }
