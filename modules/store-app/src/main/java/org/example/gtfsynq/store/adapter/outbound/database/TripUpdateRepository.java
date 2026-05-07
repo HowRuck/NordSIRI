@@ -7,8 +7,10 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.gtfsynq.shared.model.dto.TripDescriptorDto;
 import org.example.gtfsynq.shared.model.dto.TripStopTimeUpdateDto;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class TripUpdateRepository {
 
     private static final int BATCH_SIZE = 512;
@@ -208,6 +211,20 @@ public class TripUpdateRepository {
         );
 
         upsertHotStopTimeUpdates(updates);
+    }
+
+    public int deleteAllByUpdatedAtBefore(LocalDateTime updatedAt) {
+        var sql = String.format(
+            """
+            DELETE FROM rt_trip_updates_hot
+            WHERE updated_at < ?
+            """,
+            updatedAt
+        );
+
+        var rowsAffected = jdbcTemplate.update(sql, updatedAt);
+
+        return rowsAffected;
     }
 
     /**
