@@ -10,5 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 class SiriAnalyzerApplicationTests {
 
     @Test
-    void contextLoads() {}
+    void contextLoads() {
+        // Intentionally left blank
+        // The test passes if the Spring application context starts successfully
+    }
 }
