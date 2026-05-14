@@ -2,158 +2,108 @@ package org.example.gtfsynq.ingest.service;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.gtfsynq.shared.protocol.BinaryFeedEntityWithMetadata;
 import org.example.gtfsynq.ingest.adapter.inbound.protobuf.GtfsNativeFilter;
+import org.example.gtfsynq.ingest.service.exception.GtfsIngestionException;
 import org.example.gtfsynq.shared.util.SizeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
-/**
- * Service for polling a GTFS feed
- */
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class GtfsPollingService {
 
-    private final RestClient restClient;
-    private final GtfsNativeFilter nativeFilter;
+	private static final int MAX_ATTEMPTS = 2;
+	private final RestClient restClient;
+	private final GtfsNativeFilter nativeFilter;
 
-    /**
-     * Downloads the GTFS feed from the configured URL and returns it as a byte array
-     *
-     * @return The GTFS feed as a byte array
-     */
-    public byte[] downloadToBytes(String feedUrl) {
-        var startTime = System.currentTimeMillis();
-        log.info("Downloading GTFS feed from {}", feedUrl);
+	public byte[] downloadToBytes(String feedUrl) {
+		var startTime = System.currentTimeMillis();
+		log.info("Downloading GTFS feed from {}", feedUrl);
 
-        try {
-            var bytes = restClient
-                .get()
-                .uri(feedUrl)
-                .retrieve()
-                .body(byte[].class);
+		try {
+			var bytes = restClient.get()
+					.uri(feedUrl)
+					.retrieve()
+					.body(byte[].class);
 
-            log.info(
-                "Downloaded GTFS feed of size {} in {} ms",
-                SizeFormat.humanBytes(bytes.length),
-                System.currentTimeMillis() - startTime
-            );
+			var safeBytes = Objects.requireNonNullElse(bytes, new byte[0]);
 
-            return bytes;
-        } catch (Exception e) {
-            log.error("Failed to download GTFS feed", e);
-            return null;
-        }
-    }
+			log.info("Downloaded GTFS feed of size {} in {} ms",
+					SizeFormat.humanBytes(safeBytes.length),
+					System.currentTimeMillis() - startTime);
 
-    public List<BinaryFeedEntityWithMetadata> pollStream(
-        String feedId,
-        String feedUrl
-    ) {
-        var startTime = System.currentTimeMillis();
-        log.debug(
-            "Polling GTFS feed stream for feed {} from {}",
-            feedId,
-            feedUrl
-        );
+			return safeBytes;
+		} catch (RestClientException e) {
+			log.error("Network or HTTP error downloading feed from {}", feedUrl, e);
+			return new byte[0];
+		}
+	}
 
-        try {
-            return restClient
-                .get()
-                .uri(feedUrl)
-                .exchange((_, response) -> {
-                    HttpStatusCode statusCode = response.getStatusCode();
+	public List<BinaryFeedEntityWithMetadata> pollStream(String feedId, String feedUrl) {
+		var startTime = System.currentTimeMillis();
+		log.debug("Polling GTFS feed stream for feed {} from {}", feedId, feedUrl);
 
-                    if (statusCode == HttpStatus.TOO_MANY_REQUESTS) {
-                        var retryAfter = response
-                            .getHeaders()
-                            .getFirst("Retry-After");
+		try {
+			return restClient.get()
+					.uri(feedUrl)
+					.exchange((_, response) -> {
+						var statusCode = response.getStatusCode();
 
-                        log.warn(
-                            "Rate limit hit while polling GTFS feed {} from {}",
-                            feedId,
-                            feedUrl
-                        );
-                        if (retryAfter != null) {
-                            log.warn("Retry-After: {} seconds", retryAfter);
-                        }
+						if (statusCode == HttpStatus.TOO_MANY_REQUESTS) {
+							var retryAfter = response.getHeaders().getFirst("Retry-After");
 
-                        return null;
-                    }
+							log.warn("Rate limit hit for {}. Retry-After: {}s",
+									feedId, Optional.ofNullable(retryAfter).orElse("unknown"));
 
-                    if (!statusCode.is2xxSuccessful()) {
-                        log.warn(
-                            "Unexpected HTTP status {} while polling GTFS feed {} from {}",
-                            statusCode.value(),
-                            feedId,
-                            feedUrl
-                        );
-                        return null;
-                    }
+							return null;
+						}
 
-                    var responseLength = response
-                        .getHeaders()
-                        .getContentLength();
+						if (!statusCode.is2xxSuccessful()) {
+							log.warn("Unexpected HTTP {} for {}", statusCode.value(), feedId);
+							return null;
+						}
 
-                    var responseLengthStr =
-                        responseLength != 0
-                            ? SizeFormat.humanBytes(responseLength)
-                            : "unknown";
+						try {
+							var feedBytes = response.getBody().readAllBytes();
+							return parseWithRetry(feedId, feedUrl, feedBytes);
+						} catch (IOException e) {
+							throw new GtfsIngestionException("Failed to read response body", e);
+						} finally {
+							log.debug("Processed {} in {} ms", feedId, System.currentTimeMillis() - startTime);
+						}
+					});
+		} catch (RestClientException | GtfsIngestionException e) {
+			log.error("Failed to poll feed {} due to: {}", feedId, e.getMessage());
+			return null;
+		}
+	}
 
-                    log.debug(
-                        "Received GTFS feed stream of size {} in {} ms",
-                        responseLengthStr,
-                        System.currentTimeMillis() - startTime
-                    );
+	private List<BinaryFeedEntityWithMetadata> parseWithRetry(String id, String url, byte[] data)
+			throws InvalidProtocolBufferException {
 
-                    var feedBytes = response.getBody().readAllBytes();
+		InvalidProtocolBufferException lastError = null;
 
-                    try {
-                        return nativeFilter.parseNative(
-                            feedId,
-                            feedUrl,
-                            new ByteArrayInputStream(feedBytes)
-                        );
-                    } catch (InvalidProtocolBufferException firstError) {
-                        log.warn(
-                            "Failed to parse GTFS feed stream for feed {} from {} on first attempt: {}",
-                            feedId,
-                            feedUrl,
-                            firstError.getMessage()
-                        );
+		for (var attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+			try (var is = new ByteArrayInputStream(data)) {
+				return nativeFilter.parseNative(id, url, is);
+			} catch (InvalidProtocolBufferException e) {
+				lastError = e;
+				log.warn("Parsing attempt {} failed for {}: {}", attempt, id, e.getMessage());
+			} catch (IOException e) {
+				throw new GtfsIngestionException("Stream closure error", e);
+			}
+		}
 
-                        try {
-                            return nativeFilter.parseNative(
-                                feedId,
-                                feedUrl,
-                                new ByteArrayInputStream(feedBytes)
-                            );
-                        } catch (InvalidProtocolBufferException secondError) {
-                            log.warn(
-                                "Retry failed while parsing GTFS feed stream for feed {} from {}: {}",
-                                feedId,
-                                feedUrl,
-                                secondError.getMessage()
-                            );
-                            throw secondError;
-                        }
-                    } finally {
-                        log.debug(
-                            "Finished processing GTFS feed stream in {} ms",
-                            System.currentTimeMillis() - startTime
-                        );
-                    }
-                });
-        } catch (Exception e) {
-            log.error("Failed to poll GTFS feed stream", e);
-            return null;
-        }
-    }
+		throw Objects.requireNonNull(lastError, "Retry loop finished without capturing error");
+	}
 }
