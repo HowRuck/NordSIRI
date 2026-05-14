@@ -14,38 +14,55 @@ spring:
 server:
     port: ${SERVER_PORT:8081}
 
+gtfs:
+    sources:
+        gtfs-de:
+            static-config:
+                url: https://download.gtfs.de/germany/free/latest.zip
+            realtime-config:
+                urls:
+                    - https://realtime.gtfs.de/realtime-free.pb
+                poll-interval-seconds: 30
+
+        entur:
+            static-config:
+                url: https://storage.googleapis.com/marduk-production/outbound/gtfs/rb_norway-aggregated-gtfs-basic.zip
+            realtime-config:
+                urls:
+                    - https://api.entur.io/realtime/v1/gtfs-rt/trip-updates
+                poll-interval-seconds: 30
+
+        helsinki-hsl:
+            static-config:
+                url: https://infopalvelut.storage.hsldev.com/gtfs/hsl.zip
+            realtime-config:
+                urls:
+                    - https://realtime.hsl.fi/realtime/trip-updates/v2/hsl
+                poll-interval-seconds: 30
+
+        ovapi:
+            static-config:
+                url: https://gtfs.ovapi.nl/nl/gtfs-nl.zip
+            realtime-config:
+                urls:
+                    - https://gtfs.ovapi.nl/nl/tripUpdates.pb
+                poll-interval-seconds: 30
+
+        sncf:
+            static-config:
+                url: https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip
+            realtime-config:
+                urls:
+                    - https://proxy.transport.data.gouv.fr/resource/sncf-gtfs-rt-trip-updates
+                    - https://proxy.transport.data.gouv.fr/resource/sncf-gtfs-rt-service-alerts
+                poll-interval-seconds: 30
+
 # GTFSynq-specific configuration
 gtfsynq:
     # Polling configuration
     polling:
         interval-ms: 30000
         enabled: true
-
-    # Feed configurations
-    # Each feed has a unique ID and one or more URLs
-    feeds:
-        gtfs-de:
-            urls:
-                - https://realtime.gtfs.de/realtime-free.pb
-
-        entur:
-            urls:
-                - https://api.entur.io/realtime/v1/gtfs-rt/trip-updates
-                - https://api.entur.io/realtime/v1/gtfs-rt/alerts
-
-        helsinki-hsl:
-            urls:
-                - https://realtime.hsl.fi/realtime/trip-updates/v2/hsl
-
-        ovapi:
-            urls:
-                - https://gtfs.ovapi.nl/nl/tripUpdates.pb
-                - https://gtfs.ovapi.nl/nl/alerts.pb
-
-        sncf:
-            urls:
-                - https://proxy.transport.data.gouv.fr/resource/sncf-gtfs-rt-trip-updates
-                - https://proxy.transport.data.gouv.fr/resource/sncf-gtfs-rt-service-alerts
 
     # Source configuration
     source:
@@ -80,25 +97,6 @@ gtfsynq:
             enabled: true
         alert:
             enabled: true
-
-# Legacy configuration (for backward compatibility)
-gtfs:
-    fetch:
-        interval-ms: 30000
-    feeds:
-        gtfs-de:
-            - https://realtime.gtfs.de/realtime-free.pb
-        entur:
-            - https://api.entur.io/realtime/v1/gtfs-rt/trip-updates
-            - https://api.entur.io/realtime/v1/gtfs-rt/alerts
-        helsinki-hsl:
-            - https://realtime.hsl.fi/realtime/trip-updates/v2/hsl
-        ovapi:
-            - https://gtfs.ovapi.nl/nl/tripUpdates.pb
-            - https://gtfs.ovapi.nl/nl/alerts.pb
-        sncf:
-            - https://proxy.transport.data.gouv.fr/resource/sncf-gtfs-rt-trip-updates
-            - https://proxy.transport.data.gouv.fr/resource/sncf-gtfs-rt-service-alerts
 
 # HTTP client tuning for feed polling
 rest:
