@@ -1,17 +1,37 @@
 version: 2
 updates:
-  - package-ecosystem: "gradle"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    commit-message:
-      prefix: chore
-      include: scope
+    # Gradle
+    - package-ecosystem: gradle
+      directories:
+          - /
+          - /modules/api-app
+          - /modules/ingest-app
+          - /modules/shared
+          - /modules/store-app
+      schedule:
+          interval: daily
+      commit-message:
+          prefix: chore
+          include: scope
 
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    commit-message:
-      prefix: chore
-      include: scope
+    # Docker
+    - package-ecosystem: docker
+      directories:
+          - /docker/api-app
+          - /docker/ingest-app
+          - /docker/store-app
+      schedule:
+          interval: daily
+      commit-message:
+          prefix: chore
+          include: scope
+
+    # Docker Compose
+    - package-ecosystem: docker-compose
+      directories:
+          - /
+      schedule:
+          interval: daily
+      commit-message:
+          prefix: chore
+          include: scope
