@@ -128,47 +128,7 @@ public class TripUpdateRepository {
 				sql,
 				updates,
 				BATCH_SIZE,
-				(preparedStatement, update) -> {
-					preparedStatement.setLong(1, update.tripKey());
-					preparedStatement.setObject(2, update.feedId(), Types.OTHER);
-					preparedStatement.setTimestamp(
-							3,
-							Timestamp.from(update.feedTs()));
-					setNullableInteger(preparedStatement, 4, update.stopSequence());
-					preparedStatement.setString(5, update.stopId());
-					preparedStatement.setTimestamp(
-							6,
-							update.arrivalTime() == null
-									? null
-									: Timestamp.from(update.arrivalTime()));
-					setNullableInteger(preparedStatement, 7, update.arrivalDelay());
-					preparedStatement.setTimestamp(
-							8,
-							update.scheduledArrivalTime() == null
-									? null
-									: Timestamp.from(update.scheduledArrivalTime()));
-					preparedStatement.setTimestamp(
-							9,
-							update.departureTime() == null
-									? null
-									: Timestamp.from(update.departureTime()));
-					setNullableInteger(
-							preparedStatement,
-							10,
-							update.departureDelay());
-					preparedStatement.setTimestamp(
-							11,
-							update.scheduledDepartureTime() == null
-									? null
-									: Timestamp.from(update.scheduledDepartureTime()));
-					preparedStatement.setObject(
-							12,
-							update.scheduleRelationship() == null
-									? null
-									: update.scheduleRelationship(),
-							Types.OTHER);
-					preparedStatement.setString(13, update.assignedStopId());
-				});
+				this::bindStopTimeUpdateParameters);
 	}
 
 	public void upsertHotTrips(
@@ -206,13 +166,52 @@ public class TripUpdateRepository {
 	}
 
 	/**
-	 * Utility method to set a nullable integer value in a prepared statement
+	 * Binds TripStopTimeUpdateDto parameters to a prepared statement
 	 *
-	 * @param ps    the prepared statement
-	 * @param index the parameter index
-	 * @param value the integer value to set, or null for a null value
+	 * @param preparedStatement the prepared statement
+	 * @param update            the trip stop time update DTO
 	 * @throws SQLException if a database access error occurs
 	 */
+	private void bindStopTimeUpdateParameters(
+			PreparedStatement preparedStatement,
+			TripStopTimeUpdateDto update) throws SQLException {
+
+		preparedStatement.setLong(1, update.tripKey());
+		preparedStatement.setObject(2, update.feedId(), Types.OTHER);
+		preparedStatement.setTimestamp(3, Timestamp.from(update.feedTs()));
+		setNullableInteger(preparedStatement, 4, update.stopSequence());
+		preparedStatement.setString(5, update.stopId());
+		preparedStatement.setTimestamp(
+				6,
+				update.arrivalTime() == null
+						? null
+						: Timestamp.from(update.arrivalTime()));
+		setNullableInteger(preparedStatement, 7, update.arrivalDelay());
+		preparedStatement.setTimestamp(
+				8,
+				update.scheduledArrivalTime() == null
+						? null
+						: Timestamp.from(update.scheduledArrivalTime()));
+		preparedStatement.setTimestamp(
+				9,
+				update.departureTime() == null
+						? null
+						: Timestamp.from(update.departureTime()));
+		setNullableInteger(preparedStatement, 10, update.departureDelay());
+		preparedStatement.setTimestamp(
+				11,
+				update.scheduledDepartureTime() == null
+						? null
+						: Timestamp.from(update.scheduledDepartureTime()));
+		preparedStatement.setObject(
+				12,
+				update.scheduleRelationship() == null
+						? null
+						: update.scheduleRelationship(),
+				Types.OTHER);
+		preparedStatement.setString(13, update.assignedStopId());
+	}
+
 	private void upsertHotTripRows(List<HotTripUpdateRow> rows) {
 		if (rows == null || rows.isEmpty()) {
 			return;
@@ -283,47 +282,7 @@ public class TripUpdateRepository {
 				sql,
 				updates,
 				BATCH_SIZE,
-				(preparedStatement, update) -> {
-					preparedStatement.setLong(1, update.tripKey());
-					preparedStatement.setObject(2, update.feedId(), Types.OTHER);
-					preparedStatement.setTimestamp(
-							3,
-							Timestamp.from(update.feedTs()));
-					setNullableInteger(preparedStatement, 4, update.stopSequence());
-					preparedStatement.setString(5, update.stopId());
-					preparedStatement.setTimestamp(
-							6,
-							update.arrivalTime() == null
-									? null
-									: Timestamp.from(update.arrivalTime()));
-					setNullableInteger(preparedStatement, 7, update.arrivalDelay());
-					preparedStatement.setTimestamp(
-							8,
-							update.scheduledArrivalTime() == null
-									? null
-									: Timestamp.from(update.scheduledArrivalTime()));
-					preparedStatement.setTimestamp(
-							9,
-							update.departureTime() == null
-									? null
-									: Timestamp.from(update.departureTime()));
-					setNullableInteger(
-							preparedStatement,
-							10,
-							update.departureDelay());
-					preparedStatement.setTimestamp(
-							11,
-							update.scheduledDepartureTime() == null
-									? null
-									: Timestamp.from(update.scheduledDepartureTime()));
-					preparedStatement.setObject(
-							12,
-							update.scheduleRelationship() == null
-									? null
-									: update.scheduleRelationship(),
-							Types.OTHER);
-					preparedStatement.setString(13, update.assignedStopId());
-				});
+				this::bindStopTimeUpdateParameters);
 	}
 
 	private void setNullableInteger(
